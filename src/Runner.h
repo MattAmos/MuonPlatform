@@ -5,6 +5,6 @@
 #ifndef RUNNER
 #define RUNNER
 
-// Store all config values and other important global variables
+// Store all config values and other important global variables here
 
 #endif
