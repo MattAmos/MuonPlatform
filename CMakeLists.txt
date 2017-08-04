@@ -20,5 +20,6 @@ add_compile_options(-mtune=native)
 add_compile_options(-fdiagnostics-color=always)
 
 add_executable( Runner src/Runner.cpp )
+add_executable( GPIO_test test/GPIO_test.cpp )
 
 target_link_libraries( Runner ${OpenCV_LIBRARIES} )
