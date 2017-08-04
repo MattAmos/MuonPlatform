@@ -15,8 +15,12 @@
 
 class GPIO {
 private:
-    int exportGPIO();
-    int unexportGPIO();
+    const std::string EXPORT_DIR   = "/sys/class/gpio/export";
+    const std::string UNEXPORT_DIR = "/sys/class/gpio/unexport";
+    const std::string GPIO_DIR     = "/sys/class/gpio/gpio";
+
+    const int exportGPIO();
+    const int unexportGPIO();
     int valuefd;          // Value File Descriptor: file location of gpio value file
     int directionfd;      // Direction File Descriptor: file location of gpio direction file
     int exportfd;         // Export File Descriptor: file location of gpio export file
@@ -26,9 +30,9 @@ private:
 public:
     GPIO(std::string gnum);
     ~GPIO();
-    int setDirGPIO(std::string dir);
-    int setValGPIO(std::string val);
-    int getValGPIO(std::string& val);
+    const int setDirGPIO(const std::string dir);
+    const int setValGPIO(const std::string val);
+    const int getValGPIO(std::string& val);
     std::string getGPIONum();
 };
 

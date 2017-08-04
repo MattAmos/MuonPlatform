@@ -15,7 +15,7 @@ GPIO::~GPIO() {
     this->unexportGPIO();
 }
 
-int GPIO::exportGPIO() {
+const int GPIO::exportGPIO() {
     int statusValue = -1;
     this->exportfd = statusValue = open(EXPORT_DIR.c_str(), O_WRONLY | O_SYNC);
     if (this->exportfd < 0) {
@@ -37,7 +37,7 @@ int GPIO::exportGPIO() {
     return statusValue;
 }
 
-int GPIO::unexportGPIO() {
+const int GPIO::unexportGPIO() {
     int statusValue  = -1;
     this->unexportfd = statusValue = open(UNEXPORT_DIR.c_str(), O_WRONLY | O_SYNC);
     if (statusValue < 0) {
@@ -59,7 +59,7 @@ int GPIO::unexportGPIO() {
     return statusValue;
 }
 
-int GPIO::setDirGPIO(std::string dir) {
+const int GPIO::setDirGPIO(std::string dir) {
     int statusValue       = -1;
     std::string dirString = GPIO_DIR + this->gpionum + "/direction";
     this->directionfd = statusValue = open(dirString.c_str(), O_WRONLY | O_SYNC);
@@ -87,7 +87,7 @@ int GPIO::setDirGPIO(std::string dir) {
     return statusValue;
 }
 
-int GPIO::setValGPIO(std::string val) {
+const int GPIO::setValGPIO(std::string val) {
     int statusValue       = -1;
     std::string valString = GPIO_DIR + this->gpionum + "/value";
     this->valuefd = statusValue = open(valString.c_str(), O_WRONLY | O_SYNC);
@@ -112,7 +112,7 @@ int GPIO::setValGPIO(std::string val) {
     return statusValue;
 }
 
-int GPIO::getValGPIO(std::string& val) {
+const int GPIO::getValGPIO(std::string& val) {
     int statusValue       = -1;
     std::string valString = GPIO_DIR + this->gpionum + "/value";
     char buff[5];
@@ -138,4 +138,8 @@ int GPIO::getValGPIO(std::string& val) {
         exit(-1);
     }
     return statusValue;
+}
+
+std::string GPIO::getGPIONum() {
+    return gpionum;
 }
