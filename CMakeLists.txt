@@ -8,18 +8,17 @@ find_package(OpenCV REQUIRED)
 
 INCLUDE_DIRECTORIES(SYSTEM ${OpenCV_INCLUDE_DIR})
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-a53")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
-set(WITH_TBB ON)
-
+#add_compile_options(-mcpu=cortex-a53)
 add_compile_options(-std=c++14)
-add_compile_options(-march=native)
-add_compile_options(-mtune=native)
 add_compile_options(-fdiagnostics-color=always)
 
 add_executable( Runner src/Runner.cpp )
 add_executable( GPIO_test test/GPIO_test.cpp )
 
 target_link_libraries( Runner ${OpenCV_LIBRARIES} )
+target_link_libraries( GPIO_test ${OpenCV_LIBRARIES} )
