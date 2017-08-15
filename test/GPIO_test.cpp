@@ -15,8 +15,8 @@ int main(int argc, char** argv) {
     bool output = true;
 
     Servo test;
-    test.id   = 16;
-    test.gpio = new GPIO("16");
+    test.id   = 12;
+    test.gpio = new GPIO("12");
 
     test.gpio->setDirGPIO("out");
     test.gpio->setValGPIO("1");

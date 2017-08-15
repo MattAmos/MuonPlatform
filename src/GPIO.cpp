@@ -8,6 +8,7 @@
 // TODO: Convert to C++ style file operations
 
 GPIO::GPIO(std::string gnum) : valuefd(-1), directionfd(-1), exportfd(-1), unexportfd(-1), gpionum(gnum) {
+    this->unexportGPIO();
     this->exportGPIO();
 }
 
@@ -18,44 +19,16 @@ GPIO::~GPIO() {
 const int GPIO::exportGPIO() {
     int statusValue = -1;
     this->exportfd = statusValue = open(EXPORT_DIR.c_str(), O_WRONLY | O_SYNC);
-    if (this->exportfd < 0) {
-        perror(("Could not open GPIO export device (" + this->gpionum + ")").c_str());
-        exit(-1);
-    }
-
-    statusValue = write(this->exportfd, (this->gpionum).c_str(), (this->gpionum).length());
-    if (statusValue < 0) {
-        perror(("Could not write to GPIO export device (" + this->gpionum + ")").c_str());
-        exit(-1);
-    }
-
-    statusValue = close(this->exportfd);
-    if (statusValue < 0) {
-        perror(("Could not close GPIO export device (" + this->gpionum + ")").c_str());
-        exit(-1);
-    }
+    statusValue                  = write(this->exportfd, (this->gpionum).c_str(), (this->gpionum).length());
+    statusValue                  = close(this->exportfd);
     return statusValue;
 }
 
 const int GPIO::unexportGPIO() {
     int statusValue  = -1;
     this->unexportfd = statusValue = open(UNEXPORT_DIR.c_str(), O_WRONLY | O_SYNC);
-    if (statusValue < 0) {
-        perror(("Could not open GPIO unexport device (" + this->gpionum + ")").c_str());
-        exit(-1);
-    }
-
-    statusValue = write(this->unexportfd, (this->gpionum).c_str(), (this->gpionum).length());
-    if (statusValue < 0) {
-        perror(("Could not write to GPIO unexport device (" + this->gpionum + ")").c_str());
-        exit(-1);
-    }
-
-    statusValue = close(this->unexportfd);
-    if (statusValue < 0) {
-        perror(("Could not close GPIO unexport device (" + this->gpionum + ")").c_str());
-        exit(-1);
-    }
+    statusValue                    = write(this->unexportfd, (this->gpionum).c_str(), (this->gpionum).length());
+    statusValue                    = close(this->unexportfd);
     return statusValue;
 }
 
