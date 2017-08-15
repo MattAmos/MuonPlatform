@@ -8,11 +8,11 @@ int main(int argc, char** argv) {
     tim.tv_sec  = 0;
     tim.tv_nsec = 1000 * usec;
 
-    bool output = true;
+    struct timespec rem;
+    rem.tv_sec  = 0;
+    tim.tv_nsec = 20000000;
 
-    if (nanosleep(&tim, NULL) < 0) {
-	std::cout << "Unsuccessful" << std::endl;
-    }
+    bool output = true;
 
     Servo test;
     test.id   = 16;
@@ -27,6 +27,9 @@ int main(int argc, char** argv) {
         }
         output = !output;
         test.gpio->setValGPIO(std::to_string(output));
+        if (nanosleep(&rem, NULL) < 0) {
+            break;
+        }
     }
 
     // std::cout << (test.id) << (test.gpio)->getGPIONum() << std::endl;
