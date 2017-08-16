@@ -25,10 +25,10 @@ int main(int argc, char** argv) {
         if (joystick.sample(&event) && event.isAxis()) {
             if (event.number == 0) {  // L3 HORIZONTAL
                 time = mid_t + (event.value / 65535.0) * (max_t - min_t);
-                // std::cout << time << std::endl;
             }
         }
 
+        output = true;
         usleep(time);
         output = false;
         usleep(20000 - time);
