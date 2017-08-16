@@ -29,3 +29,4 @@ add_executable( ServoKeyboard 	test/ServoKeyboard.cpp )
 # Link External Library Dependencies
 target_link_libraries( Runner ${OpenCV_LIBRARIES} )
 target_link_libraries( ServoKeyboard -lcurses )
+target_link_libraries( GPIO_test -lcurses )

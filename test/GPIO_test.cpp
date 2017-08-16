@@ -1,4 +1,5 @@
 #include <time.h>
+#include <curses.h>
 #include "../include/joystick/joystick.cc"
 #include "../src/Runner.h"
 
@@ -40,16 +41,16 @@ float getUptime(float currTime){
 }
 
 int main(int argc, char** argv) {
+    // Setup GPIO interface
+    GPIO test = GPIO("12");
+    test.setDirGPIO("out");
+    test.setValGPIO("0");
+
     // Setup curses terminal
     initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
-
-    // Setup GPIO interface
-    GPIO test = GPIO("12");
-    test.setDirGPIO("out");
-    test.setValGPIO("0");
 
     float time = -1;
     while (true) {
