@@ -1,10 +1,16 @@
+/*
+ *  Project Muon - Main Runner Class
+ *
+ *  Last modified: 16/08/17
+ */
+
 #include <eigen3/Eigen/Core>
 //#include <opencv2/opencv.hpp>
 //#include "../include/opencv2/highgui/highgui.hpp"
 //#include "../include/opencv2/imgproc/imgproc.hpp"
 
-#include <stdio.h>
 #include <cmath>
+#include <stdio.h>
 #include <cstring>
 #include <fstream>
 
@@ -12,11 +18,6 @@
 
 #ifndef RUNNER
 #define RUNNER
-
-struct Servo {
-    uint id;     // Details role of servo
-    GPIO* gpio;  // Points to gpio port servo is on
-};
 
 // Store all config values and other important global variables here
 

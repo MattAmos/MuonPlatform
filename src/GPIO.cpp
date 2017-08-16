@@ -1,7 +1,10 @@
-// GPIO Interface class
-// ####################
-// Code developed from github.com/halherta/RaspberryPi-GPIOClass-v2
-// Modifications made by Matthew Amos
+/*
+ *  Project Muon - GPIO Interface Class
+ *
+ *  Code developed from github.com/halherta/RaspberryPi-GPIOClass-v2
+ *  Modifications made by Matthew Amos
+ *  Last modified: 16/08/17
+ */
 
 #include "GPIO.h"
 
