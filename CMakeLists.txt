@@ -17,14 +17,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 add_compile_options(-std=c++14)
 add_compile_options(-fdiagnostics-color=always)
 
-# Build source files 
+# Build source files
 add_executable( Runner 			src/Runner.cpp )
 
 # Build test files
 add_executable( GPIO_test 		test/GPIO_test.cpp )
 add_executable( Controller 		test/Controller.cpp )
+add_executable( ServoKeyboard   test/ServoKeyboard.cpp )
 add_executable( ServoController test/ServoController.cpp )
-add_executable( ServoKeyboard 	test/ServoKeyboard.cpp )
+add_executable( MotorTest       test/motorTest.cpp )
 
 # Link External Library Dependencies
 target_link_libraries( Runner ${OpenCV_LIBRARIES} )
