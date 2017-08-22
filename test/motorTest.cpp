@@ -1,5 +1,5 @@
 #include <time.h>
-#include "../src/GPIO.cpp   "
+#include "../src/GPIO.cpp"
 /*
    The shield pinouts are
    D12 MOTORLATCH
@@ -38,7 +38,9 @@ typedef unsigned char uint8_t;
 
 static uint8_t latch_state;
 
-void latch_tx(GPIO latch, GPIO data, GPIO clk) {
+GPIO latch("14"), clk("24"), enable("25"), data("15"), pwm("7");
+
+void latch_tx() {
     unsigned char i;
 
     latch.setValGPIO("0");
@@ -63,22 +65,22 @@ void latch_tx(GPIO latch, GPIO data, GPIO clk) {
     latch.setValGPIO("1");
 }
 
-void init(GPIO enable, GPIO latch, GPIO data, GPIO clk) {
+void init() {
     latch_state = 0;
-    latch_tx(latch, data, clk);
+    latch_tx();
     enable.setValGPIO("0");
 }
 
-void DCMotorInit(uint8_t num, GPIO latch, GPIO data, GPIO clk) {
+void DCMotorInit(uint8_t num) {
     switch (num) {
         case 1: latch_state &= ~BIT(MOTOR1_A) & ~BIT(MOTOR1_B); break;
         default: return;
     }
-    latch_tx(latch, data, clk);
+    latch_tx();
     printf("Latch=%08X\n", latch_state);
 }
 
-void DCMotorRun(uint8_t motornum, uint8_t cmd, GPIO latch, GPIO data, GPIO clk) {
+void DCMotorRun(uint8_t motornum, uint8_t cmd) {
     uint8_t a, b;
 
     switch (motornum) {
@@ -105,33 +107,28 @@ void DCMotorRun(uint8_t motornum, uint8_t cmd, GPIO latch, GPIO data, GPIO clk) 
         default: return;
     }
 
-    latch_tx(latch, data, clk);
+    latch_tx();
 
     printf("Latch=%08X\n", latch_state);
-}
-
-void gpioPWM(GPIO test, int time) {
-    test.setValGPIO("1");
-    usleep(time);
-    test.setValGPIO("0");
-    usleep(255 - time);
 }
 
 int main(int argc, char** argv) {
     int i;
 
-    GPIO latch("14"), clk("24"), enable("25"), data("15"), pwm("7");
     latch.setDirGPIO("out");
     clk.setDirGPIO("out");
     enable.setDirGPIO("out");
     data.setDirGPIO("out");
     pwm.setDirGPIO("out");
 
-    gpioPWM(pwm, 128);
+    pwm.setValGPIO("1");
+    usleep(128);
+    pwm.setValGPIO("0");
+    usleep(255 - 128);
 
-    init(enable, latch, data, clk);
+    init();
 
-    DCMotorRun(1, FORWARD, latch, data, clk);
+    DCMotorRun(1, FORWARD);
 
     // for (i = 60; i < 160; i += 20) {
     //     gpioPWM(pwm, i);
@@ -153,8 +150,8 @@ int main(int argc, char** argv) {
     //     DCMotorRun(1, RELEASE, latch, data, clk);
     //     sleep(2);
     // }
-    gpioPWM(pwm, 0);
-    DCMotorRun(1, RELEASE, latch, data, clk);
+    pwm.setValGPIO("0");
+    DCMotorRun(1, RELEASE);
 
     return 0;
 }
