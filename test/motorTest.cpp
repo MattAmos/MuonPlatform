@@ -1,5 +1,5 @@
 #include <time.h>
-#include "../src/GPIO.cpp"
+#include "../src/GPIO.cpp   "
 /*
    The shield pinouts are
    D12 MOTORLATCH
@@ -127,31 +127,33 @@ int main(int argc, char** argv) {
     data.setDirGPIO("out");
     pwm.setDirGPIO("out");
 
-    gpioPWM(pwm, 0);
+    gpioPWM(pwm, 128);
 
     init(enable, latch, data, clk);
 
-    for (i = 60; i < 160; i += 20) {
-        gpioPWM(pwm, i);
+    DCMotorRun(1, FORWARD, latch, data, clk);
 
-        DCMotorRun(1, FORWARD, latch, data, clk);
+    // for (i = 60; i < 160; i += 20) {
+    //     gpioPWM(pwm, i);
 
-        sleep(2);
+    //     DCMotorRun(1, FORWARD, latch, data, clk);
 
-        DCMotorRun(1, RELEASE, latch, data, clk);
+    //     sleep(2);
 
-        sleep(2);
+    //     DCMotorRun(1, RELEASE, latch, data, clk);
 
-        gpioPWM(pwm, 220 - i);
+    //     sleep(2);
 
-        DCMotorRun(1, BACKWARD, latch, data, clk);
+    //     gpioPWM(pwm, 220 - i);
 
-        sleep(2);
+    //     DCMotorRun(1, BACKWARD, latch, data, clk);
 
-        DCMotorRun(1, RELEASE, latch, data, clk);
-        sleep(2);
-    }
-    gpioPWM(pwm, i);
+    //     sleep(2);
+
+    //     DCMotorRun(1, RELEASE, latch, data, clk);
+    //     sleep(2);
+    // }
+    gpioPWM(pwm, 0);
     DCMotorRun(1, RELEASE, latch, data, clk);
 
     return 0;
