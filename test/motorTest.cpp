@@ -42,35 +42,28 @@ void latch_tx(GPIO latch, GPIO data, GPIO clk)
 {
 	unsigned char i;
 
-	latch.setDirGPIO("out");
 	latch.setValGPIO("0");
 
-	data.setDirGPIO("out");
 	data.setValGPIO("0");
 
 	for(i=0; i<8; i++)
 	{
 		usleep(10);
-		clk.setDirGPIO("out");
 		clk.setValGPIO("0");
 
 		if(latch_state & BIT(7-i))
 		{
-			data.setDirGPIO("out");
 			data.setValGPIO("1");
 		}
 		else
 		{
-			data.setDirGPIO("out");
 			data.setValGPIO("0");
 		}
 
 		usleep(10);
 
-		clk.setDirGPIO("out");
 		clk.setValGPIO("1");
 	}
-	latch.setDirGPIO("out");
 	latch.setValGPIO("1");
 }
 
@@ -78,7 +71,6 @@ void init(GPIO enable)
 {
 	latch_state = 0;
 	latch_tx();
-	enable.setDirGPIO("out");
 	enable.setValGPIO("0");
 }
 
@@ -116,7 +108,52 @@ void DCMotorRun(uint8_t motornum, unit8_t cmd)
   	printf("Latch=%08X\n", latch_state);
 }
 
+void gpioPWM (GPIO test, int time)
+{
+	test.setValGPIO("1");
+    usleep(time);
+    test.setValGPIO("0");
+	usleep(255 - time);
+}
+
 int main(int argc, char** argv)
 {
-	
+	int i;
+
+	GPIO latch, clk, enable, data, pwm;
+	latch.setDirGPIO("out");
+	clk.setDirGPIO("out");
+	enable.setDirGPIO("out");
+	data.setDirGPIO("out");
+	pwm.setDirGPIO("out");
+
+	gpioPWM(MOTOR_1_PWM, 0);
+
+	init(enable);
+
+	for (i=60; i<160; i+=20)
+   	{
+   		gpioPWM(MOTOR_1_PWM, i);
+
+   		DCMotorRun(1, FORWARD);
+
+   		sleep(2);
+
+   		DCMotorRun(1, RELEASE);
+
+   		sleep(2);
+
+   		gpioPWM(MOTOR1_PWM, 220-i);
+
+   		DCMotorRun(1, BACKWARD);
+
+   		sleep(2);
+
+   		DCMotorRun(1, RELEASE);
+   		sleep(2);
+   	}
+   	gpioPWM(MOTOR_1_PWM, i);
+   	DCMotorRun(1, RELEASE);
+
+   	return 0;
 }
