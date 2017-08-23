@@ -17,12 +17,23 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    if (softPwmCreate(SERVO, 50, 100) != 0) {
-        std::cout << "Error setting up pin" << SERVO << ". Exiting..." << std::endl;
-        return -1;
-    }
+    // if (softPwmCreate(SERVO, 50, 100) != 0) {
+    //     std::cout << "Error setting up pin" << SERVO << ". Exiting..." << std::endl;
+    //     return -1;
+    // }
+
+    // Setup curses terminal
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
 
     float time = (MAX_T + MIN_T) / 2.0;
+
+    pinMode(SERVO, PWM_OUTPUT);
+    pwmSetMode(PWM_MODE_BAL);
+    pwmSetRange(1024);
+    pwmSetClock(1);
 
     while (true) {
         int ch = getch();
@@ -42,6 +53,6 @@ int main(int argc, char** argv) {
         addstr(("Uptime: " + std::to_string(time)).c_str());
         refresh();
 
-        softPwmWrite(SERVO, int(time));
+        // softPwmWrite(SERVO, int(time));
     }
 }
