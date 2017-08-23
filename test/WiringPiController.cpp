@@ -8,8 +8,8 @@
 #include <wiringPi.h>
 #include "../src/PinMap.h"
 
-#define MIN_T 0
-#define MAX_T 100
+#define MIN_T 500
+#define MAX_T 1700
 
 int main(int argc, char** argv) {
     if (wiringPiSetupGpio() < 0) {
@@ -32,16 +32,16 @@ int main(int argc, char** argv) {
 
     pinMode(SERVO, PWM_OUTPUT);
     pwmSetMode(PWM_MODE_BAL);
-    pwmSetRange(1024);
-    pwmSetClock(1);
+    pwmSetRange(200);
+    pwmSetClock(1920);
 
     while (true) {
         int ch = getch();
         switch (ch) {
             case 'w': break;
-            case 'a': time -= 10; break;
+            case 'a': time -= 100; break;
             case 's': break;
-            case 'd': time += 10; break;
+            case 'd': time += 100; break;
         }
         if (time < MIN_T) {
             time = MIN_T;
@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
         move(0, 0);
         addstr(("Uptime: " + std::to_string(time)).c_str());
         refresh();
-
-        // softPwmWrite(SERVO, int(time));
+	pwmWrite(SERVO, 0);
+	// softPwmWrite(SERVO, int(time));
     }
 }

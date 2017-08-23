@@ -3,17 +3,17 @@
 #include "../include/joystick/joystick.cc"
 #include "../src/Runner.h"
 
-int min_t = 553, max_t = 2450;
+int min_t = 500, max_t = 1700;
 int mid_t = (max_t + min_t) / 2.0;
 
 // Create an instance of Joystick
 Joystick joystick("/dev/input/js0");
+JoystickEvent event;
 
 float getUptime(float currTime) {
     float time = (currTime == -1 ? mid_t : currTime);
 
     if (joystick.isFound()) {
-        JoystickEvent event;
         if (joystick.sample(&event) && event.isAxis()) {
             if (event.number == 0) {  // L3 HORIZONTAL
                 time = mid_t + (event.value / 65535.0) * (max_t - min_t);
@@ -23,8 +23,8 @@ float getUptime(float currTime) {
     else {
         int ch = getch();
         switch (ch) {
-            case 'a': time -= 100; break;
-            case 'd': time += 100; break;
+            case 'a': time += 100; break;
+            case 'd': time -= 100; break;
         }
         if (time < min_t) {
             time = min_t;
