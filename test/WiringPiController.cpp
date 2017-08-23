@@ -8,8 +8,8 @@
 #include <wiringPi.h>
 #include "../src/PinMap.h"
 
-#define MIN_T 600.0
-#define MAX_T 1700.0
+#define MIN_T 0
+#define MAX_T 100
 
 int main(int argc, char** argv) {
     if (wiringPiSetupGpio() < 0) {
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    if (softPwmCreate(SERVO, 1100, 100) != 0) {
+    if (softPwmCreate(SERVO, 50, 100) != 0) {
         std::cout << "Error setting up pin" << SERVO << ". Exiting..." << std::endl;
         return -1;
     }
@@ -28,9 +28,9 @@ int main(int argc, char** argv) {
         int ch = getch();
         switch (ch) {
             case 'w': break;
-            case 'a': time -= 100; break;
+            case 'a': time -= 10; break;
             case 's': break;
-            case 'd': time += 100; break;
+            case 'd': time += 10; break;
         }
         if (time < MIN_T) {
             time = MIN_T;
