@@ -1,14 +1,23 @@
 #include <curses.h>
 #include <time.h>
+#include <csignal>
 #include "../include/joystick/joystick.cc"
 #include "../src/Runner.h"
 
 int min_t = 500, max_t = 1700;
 int mid_t = (max_t + min_t) / 2.0;
 
+GPIO test = GPIO("12");
+
 // Create an instance of Joystick
 Joystick joystick("/dev/input/js0");
 JoystickEvent event;
+
+void signalHandler(int sigNum) {
+    std::cout << "Interrupt signal (" << sigNum << ") received. Exiting gracefully..." << std::endl;
+    test.~GPIO();
+    exit(sigNum);
+}
 
 float getUptime(float currTime) {
     float time = (currTime == -1 ? mid_t : currTime);
@@ -37,8 +46,10 @@ float getUptime(float currTime) {
 }
 
 int main(int argc, char** argv) {
+    // Register signal handler
+    signal(SIGINT, signalHandler);
+
     // Setup GPIO interface
-    GPIO test = GPIO("12");
     test.setDirGPIO("out");
     test.setValGPIO("0");
 
