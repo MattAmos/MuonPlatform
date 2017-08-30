@@ -1,22 +1,20 @@
 #ifndef I2C_H
 #define I2C_H
 
-#include <stdio.h>
-
 #include <iostream>
 #include <string>
 
-#include <fcntl.h>          //Needed for I2C port
-#include <linux/i2c-dev.h>  //Needed for I2C port
-#include <sys/ioctl.h>      //Needed for I2C port
-#include <unistd.h>         //Needed for I2C port
+#include <fcntl.h>
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 class I2C {
 private:
-    const std::string path = "/dev/";
-    std::string name;
-    int fd;
-    int addr;
+    const std::string path = "/dev/";  // Path to interface with I2C devices
+    std::string name;                  // Name of I2C device file
+    int fd;                            // File descriptor of I2C device file
+    int addr;                          // Address of I2C device
 
 public:
     I2C(std::string path, int addrIn);

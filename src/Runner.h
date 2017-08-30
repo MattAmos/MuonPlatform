@@ -9,12 +9,13 @@
 //#include "../include/opencv2/highgui/highgui.hpp"
 //#include "../include/opencv2/imgproc/imgproc.hpp"
 
-#include <cmath>
 #include <stdio.h>
+#include <cmath>
 #include <cstring>
 #include <fstream>
 
 #include "GPIO.cpp"
+#include "I2C.cpp"
 
 #ifndef RUNNER
 #define RUNNER
