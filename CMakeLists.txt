@@ -21,10 +21,10 @@ add_compile_options(-fdiagnostics-color=always)
 add_executable( Runner 			 src/Runner.cpp )
 
 # Build independent test files
-add_executable( GPIO_test 		 test/GPIO_test.cpp )
-add_executable( Controller 		 test/Controller.cpp )
-add_executable( ServoKeyboard    test/ServoKeyboard.cpp )
-add_executable( ServoController  test/ServoController.cpp )
+add_executable( GPIO_test 		 test/GPIOTest.cpp )
+add_executable( Controller 		 test/ControllerTest.cpp )
+add_executable( ServoKeyboard    test/ServoKeyboardTest.cpp )
+add_executable( ServoController  test/ServoControllerTest.cpp )
 
 # Link External Library Dependencies
 target_link_libraries( Runner ${OpenCV_LIBRARIES} -lcurses)
