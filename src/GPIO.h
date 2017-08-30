@@ -2,8 +2,8 @@
 #define GPIO_H
 
 #include <fcntl.h>
-#include <stdio.h>
 #include <unistd.h>
+#include <cstdio>
 #include <iostream>
 #include <string>
 
@@ -15,11 +15,14 @@ private:
 
     const int exportGPIO();
     const int unexportGPIO();
-    int valuefd;          // Value File Descriptor: file location of gpio value file
-    int directionfd;      // Direction File Descriptor: file location of gpio direction file
-    int exportfd;         // Export File Descriptor: file location of gpio export file
-    int unexportfd;       // Unexport File Descriptor: file location of gpio unexport file
-    std::string gpionum;  // GPIO Number: number of gpio port of object
+    std::FILE* valueFD;      // Value File Descriptor:      file location of gpio value file
+    std::FILE* directionFD;  // Direction File Descriptor:  file location of gpio direction file
+    std::FILE* exportFD;     // Export File Descriptor:     file location of gpio export file
+    std::FILE* unexportFD;   // Unexport File Descriptor:   file location of gpio unexport file
+
+    std::string gpioNum;    // GPIO Number:                number of gpio port of object
+    std::string dirString;  // Direction Directory String: path to direction directory file descriptor
+    std::string valString;  // Value Directory String:     path to value directory file descriptor
 
 public:
     GPIO(std::string gnum);
