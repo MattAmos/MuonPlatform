@@ -2,12 +2,13 @@
 #include <time.h>
 #include <csignal>
 #include "../include/joystick/joystick.cc"
-#include "../src/Runner.h"
+#include "../src/GPIO.cpp"
+#include "../src/PinMap.h"
 
-int min_t = 500, max_t = 1700;
+int min_t = SERVO_PWM_MIN, max_t = SERVO_PWM_MAX;
 int mid_t = (max_t + min_t) / 2.0;
 
-GPIO test = GPIO("12");
+GPIO test = GPIO(std::to_string(SERVO));
 
 // Create an instance of Joystick
 Joystick joystick("/dev/input/js0");
