@@ -27,21 +27,21 @@
 
 // Store all config values and other important global variables here
 struct Sensors {
-    GPIO dcA   = GPIO(std::to_string(DC_A));
-    GPIO dcB   = GPIO(std::to_string(DC_B));
-    GPIO servo = GPIO(std::to_string(SERVO));
-    GPIO pir   = GPIO(std::to_string(PIR));
+    // GPIO dcA   = GPIO(std::to_string(DC_A));
+    // GPIO dcB   = GPIO(std::to_string(DC_B));
+    // GPIO servo = GPIO(std::to_string(SERVO));
+    // GPIO pir   = GPIO(std::to_string(PIR));
     void init() {
-        servo.setPWMRange(SERVO_PWM_MIN, SERVO_PWM_MAX);
+        // servo.setPWMRange(SERVO_PWM_MIN, SERVO_PWM_MAX);
     }
     void drivePWM(){
 
     };
     void destroy() {
-        dcA.~GPIO();
-        dcB.~GPIO();
-        servo.~GPIO();
-        pir.~GPIO();
+        // dcA.~GPIO();
+        // dcB.~GPIO();
+        // servo.~GPIO();
+        // pir.~GPIO();
     };
 };
 
