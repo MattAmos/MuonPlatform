@@ -18,7 +18,9 @@ JoystickEvent event;
 
 void signalHandler(int sigNum) {
     std::cout << "Interrupt signal (" << sigNum << ") received. Exiting gracefully..." << std::endl;
-    test.~GPIO();
+    dc_a.~GPIO();
+    dc_b.~GPIO();
+    dc_s.~GPIO();
     exit(sigNum);
 }
 
@@ -58,7 +60,7 @@ int main(int argc, char** argv) {
     dc_b.setDirGPIO("out");
     dc_b.setValGPIO("1");
     dc_s.setDirGPIO("out");
-    dc_s.setValGPIO("0");
+    dc_s.setValGPIO("1");
 
     // Setup curses terminal
     initscr();
@@ -74,10 +76,10 @@ int main(int argc, char** argv) {
         addstr(("Duty Cycle: " + std::to_string(time) + " (us)").c_str());
         refresh();
 
-        dc_s.setValGPIO("1");
-        usleep(time);
-        dc_s.setValGPIO("0");
-        usleep(20000 - time);
+        // dc_s.setValGPIO("1");
+        // usleep(time);
+        // dc_s.setValGPIO("0");
+        // usleep(20000 - time);
     }
 
     return 0;
