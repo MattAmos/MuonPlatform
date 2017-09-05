@@ -56,9 +56,11 @@ int main(int argc, char** argv) {
 
     // Setup GPIO interface
     dc_a.setDirGPIO("out");
-    dc_a.setValGPIO("0");
+    dc_a.setValGPIO("1");
+
     dc_b.setDirGPIO("out");
-    dc_b.setValGPIO("1");
+    dc_b.setValGPIO("0");
+
     dc_s.setDirGPIO("out");
     dc_s.setValGPIO("1");
 
