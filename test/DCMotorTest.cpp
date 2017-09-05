@@ -5,7 +5,7 @@
 #include "../src/GPIO.cpp"
 #include "../src/PinMap.h"
 
-int min_t = SERVO_PWM_MIN, max_t = SERVO_PWM_MAX;
+int min_t = 0, max_t = 100;
 int mid_t = (max_t + min_t) / 2.0;
 
 GPIO dc_a = GPIO(std::to_string(DC_A));
@@ -37,8 +37,8 @@ float getUptime(float currTime) {
     else {
         int ch = getch();
         switch (ch) {
-            case 'a': time += 100; break;
-            case 'd': time -= 100; break;
+            case 'a': time += 10; break;
+            case 'd': time -= 10; break;
         }
         if (time < min_t) {
             time = min_t;
@@ -78,10 +78,10 @@ int main(int argc, char** argv) {
         addstr(("Duty Cycle: " + std::to_string(time) + " (us)").c_str());
         refresh();
 
-        // dc_s.setValGPIO("1");
-        // usleep(time);
-        // dc_s.setValGPIO("0");
-        // usleep(20000 - time);
+        dc_s.setValGPIO("1");
+        usleep(time);
+        dc_s.setValGPIO("0");
+        usleep(100 - time);
     }
 
     return 0;
