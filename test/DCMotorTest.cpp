@@ -57,6 +57,8 @@ int main(int argc, char** argv) {
     dc_a.setValGPIO("0");
     dc_b.setDirGPIO("out");
     dc_b.setValGPIO("1");
+    dc_s.setDirGPIO("out");
+    dc_s.setValGPIO("0");
 
     // Setup curses terminal
     initscr();
@@ -72,9 +74,9 @@ int main(int argc, char** argv) {
         addstr(("Duty Cycle: " + std::to_string(time) + " (us)").c_str());
         refresh();
 
-        dc_b.setValGPIO("1");
+        dc_s.setValGPIO("1");
         usleep(time);
-        dc_b.setValGPIO("0");
+        dc_s.setValGPIO("0");
         usleep(20000 - time);
     }
 
