@@ -44,6 +44,11 @@ struct Sensors {
         dc_3a.setDirGPIO("out");
         servo.setDirGPIO("out");
         pir.setDirGPIO("in");
+
+        dc_2a.setValGPIO("0");
+        dc_3a.setValGPIO("0");
+        dc_1a.setValGPIO("0");
+        dc_4a.setValGPIO("0");
     }
     void destroy() {
         dc_1a.~GPIO();
