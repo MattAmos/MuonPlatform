@@ -45,9 +45,6 @@ struct Sensors {
         servo.setDirGPIO("out");
         pir.setDirGPIO("in");
     }
-    void drivePWM(){
-
-    };
     void destroy() {
         dc_1a.~GPIO();
         dc_4a.~GPIO();

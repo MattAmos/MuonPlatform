@@ -139,8 +139,9 @@ void GPIO::setPWMRange(int pwmMinTime, int pwmMaxTime) {
         std::cout << "PWM range invalid. Exiting..." << std::endl;
         exit(-1);
     }
-    pwmMin = pwmMinTime;
-    pwmMax = pwmMaxTime;
+    pwmMin  = pwmMinTime;
+    pwmMax  = pwmMaxTime;
+    pwmTime = (pwmMin + pwmMax) / 2.0;
 }
 
 std::string GPIO::getGPIONum() {
