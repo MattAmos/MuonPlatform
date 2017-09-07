@@ -57,15 +57,15 @@ int main(int argc, char** argv) {
     signal(SIGINT, signalHandler);
 
     // Setup GPIO interface
-    DC_1A.setDirGPIO("out");
-    DC_4A.setDirGPIO("out");
-    DC_2A.setDirGPIO("out");
-    DC_3A.setDirGPIO("out");
+    dc_1a.setDirGPIO("out");
+    dc_4a.setDirGPIO("out");
+    dc_2a.setDirGPIO("out");
+    dc_3a.setDirGPIO("out");
 
-    DC_1A.setValGPIO("1");
-    DC_4A.setValGPIO("1");
-    DC_2A.setValGPIO("0");
-    DC_3A.setValGPIO("0");
+    dc_1a.setValGPIO("1");
+    dc_4a.setValGPIO("1");
+    dc_2a.setValGPIO("0");
+    dc_3a.setValGPIO("0");
 
     /*// Setup curses terminal
     initscr();
