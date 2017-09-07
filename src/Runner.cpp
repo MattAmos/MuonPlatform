@@ -45,8 +45,8 @@ void* inp_thread(void* threadid) {
         else {
             int ch = getch();
             switch (ch) {
-                case 'a': sensors.servo.incPwmTime(10); break;
-                case 'd': sensors.servo.incPwmTime(-10); break;
+                case 'a': sensors.servo.incPwmTime(100); break;
+                case 'd': sensors.servo.incPwmTime(-100); break;
                 case 'A': sensors.servo.setPwmTime(SERVO_PWM_MAX); break;
                 case 'D': sensors.servo.setPwmTime(SERVO_PWM_MIN); break;
                 case 'w':

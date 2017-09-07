@@ -15,7 +15,7 @@ const int I2C::openI2C() {
         std::cout << "[I2C] Failed to open I2C bus. Exiting..." << std::endl;
         exit(-1);
     }
-    if (ioctl(fd, I2C_SLAVE, addr) < 0) {
+    if (ioctl(I2C::fd, I2C_SLAVE, I2C::addr) < 0) {
         std::cout << "[I2C] Failed to acquire bus access/talk to slave at address " << I2C::addr << ". Exiting..."
                   << std::endl;
         exit(-1);

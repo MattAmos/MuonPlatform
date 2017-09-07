@@ -19,7 +19,7 @@ add_compile_options(-fdiagnostics-color=always)
 
 # Build independent source files
 add_executable( Runner 			 src/Runner.cpp)
-
+add_executable( I2CTest          test/I2CTest.cpp)
 # Build independent test files
 # add_executable( GPIOTest 		 test/GPIOTest.cpp)
 # add_executable( Controller 		 test/ControllerTest.cpp )
