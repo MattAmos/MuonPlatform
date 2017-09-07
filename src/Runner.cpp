@@ -61,6 +61,12 @@ void* inp_thread(void* threadid) {
                     sensors.dc_2a.setValGPIO("1");
                     sensors.dc_3a.setValGPIO("1");
                     break;
+                case 32:
+                    sensors.dc_1a.setValGPIO("0");
+                    sensors.dc_4a.setValGPIO("0");
+                    sensors.dc_2a.setValGPIO("0");
+                    sensors.dc_3a.setValGPIO("0");
+                    break;
             }
         }
     }
