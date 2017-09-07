@@ -116,6 +116,33 @@ const int GPIO::getValGPIO(std::string& val) {
     return statusValue;
 }
 
+void GPIO::setPwmTime(int time) {
+    pwmTime = time;
+}
+
+int GPIO::getPwmTime() {
+    return pwmTime;
+}
+
+void GPIO::incPwmTime(int timeInc) {
+    pwmTime += timeInc;
+    if (pwmTime < pwmMin) {
+        pwmTime = pwmMin;
+    }
+    if (pwmTime > pwmMax) {
+        pwmTime = pwmMax;
+    }
+}
+
+void GPIO::setPWMRange(int pwmMinTime, int pwmMaxTime) {
+    if (pwmMinTime >= pwmMaxTime) {
+        std::cout << "PWM range invalid. Exiting..." << std::endl;
+        exit(-1);
+    }
+    pwmMin = pwmMinTime;
+    pwmMax = pwmMaxTime;
+}
+
 std::string GPIO::getGPIONum() {
     return gpionum;
 }

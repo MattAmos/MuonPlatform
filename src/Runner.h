@@ -14,38 +14,48 @@
 #include "../include/opencv2/highgui/highgui.hpp"
 #include "../include/opencv2/imgproc/imgproc.hpp"
 
+#include <curses.h>
 #include <pthread.h>
+#include <time.h>
 #include <chrono>
 #include <cmath>
 #include <csignal>
 #include <cstdio>
 #include <cstring>
 
+#include "../include/joystick/joystick.cc"
 #include "GPIO.cpp"
 #include "I2C.cpp"
 #include "PinMap.h"
 
 // Store all config values and other important global variables here
 struct Sensors {
-    // GPIO dcA   = GPIO(std::to_string(DC_A));
-    // GPIO dcB   = GPIO(std::to_string(DC_B));
-    // GPIO servo = GPIO(std::to_string(SERVO));
-    // GPIO pir   = GPIO(std::to_string(PIR));
+    GPIO dc_1a = GPIO(std::to_string(DC_1A));
+    GPIO dc_4a = GPIO(std::to_string(DC_4A));
+    GPIO dc_2a = GPIO(std::to_string(DC_2A));
+    GPIO dc_3a = GPIO(std::to_string(DC_3A));
+    GPIO servo = GPIO(std::to_string(SERVO));
+    GPIO pir   = GPIO(std::to_string(PIR));
     void init() {
-        // servo.setPWMRange(SERVO_PWM_MIN, SERVO_PWM_MAX);
+        servo.setPWMRange(SERVO_PWM_MIN, SERVO_PWM_MAX);
     }
     void drivePWM(){
 
     };
     void destroy() {
-        // dcA.~GPIO();
-        // dcB.~GPIO();
-        // servo.~GPIO();
-        // pir.~GPIO();
+        dc_1a.~GPIO();
+        dc_4a.~GPIO();
+        dc_2a.~GPIO();
+        dc_3a.~GPIO();
     };
 };
 
 Sensors sensors;
+int currCh;
+
+Joystick joystick("/dev/input/js0");
+JoystickEvent event;
+int mid_t = (SERVO_PWM_MAX + SERVO_PWM_MIN) / 2.0;
 
 // Networking config parameters
 std::string IMG_DIR = "~/images/";   // Image directory to copy into
