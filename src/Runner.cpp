@@ -27,6 +27,10 @@ void* pwm_thread(void* threadid) {
 }
 
 void* inp_thread(void* threadid) {
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
     while (true) {
         if (joystick.isFound()) {
             if (joystick.sample(&event) && event.isAxis()) {
