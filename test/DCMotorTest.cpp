@@ -8,9 +8,10 @@
 int min_t = 0, max_t = 100;
 int mid_t = (max_t + min_t) / 2.0;
 
-GPIO dc_a = GPIO(std::to_string(DC_A));
-GPIO dc_b = GPIO(std::to_string(DC_B));
-GPIO dc_s = GPIO(std::to_string(DC_S));
+GPIO dc_1a = GPIO(std::to_string(DC_1A));
+GPIO dc_4a = GPIO(std::to_string(DC_4A));
+GPIO dc_2a = GPIO(std::to_string(DC_2A));
+GPIO dc_3a = GPIO(std::to_string(DC_3A));
 
 // Create an instance of Joystick
 Joystick joystick("/dev/input/js0");
@@ -18,9 +19,10 @@ JoystickEvent event;
 
 void signalHandler(int sigNum) {
     std::cout << "Interrupt signal (" << sigNum << ") received. Exiting gracefully..." << std::endl;
-    dc_a.~GPIO();
-    dc_b.~GPIO();
-    dc_s.~GPIO();
+    dc_1a.~GPIO();
+    dc_4a.~GPIO();
+    dc_2a.~GPIO();
+    dc_3a.~GPIO();
     exit(sigNum);
 }
 
@@ -55,16 +57,17 @@ int main(int argc, char** argv) {
     signal(SIGINT, signalHandler);
 
     // Setup GPIO interface
-    dc_a.setDirGPIO("out");
-    dc_a.setValGPIO("1");
+    DC_1A.setDirGPIO("out");
+    DC_4A.setDirGPIO("out");
+    DC_2A.setDirGPIO("out");
+    DC_3A.setDirGPIO("out");
 
-    dc_b.setDirGPIO("out");
-    dc_b.setValGPIO("0");
+    DC_1A.setValGPIO("1");
+    DC_4A.setValGPIO("1");
+    DC_2A.setValGPIO("0");
+    DC_3A.setValGPIO("0");
 
-    dc_s.setDirGPIO("out");
-    dc_s.setValGPIO("1");
-
-    // Setup curses terminal
+    /*// Setup curses terminal
     initscr();
     cbreak();
     noecho();
@@ -82,7 +85,10 @@ int main(int argc, char** argv) {
         usleep(time);
         dc_s.setValGPIO("0");
         usleep(100 - time);
-    }
+    }*/
+
+    while (true)
+        ;
 
     return 0;
 }
