@@ -17,9 +17,9 @@ private:
     int addr;                          // Address of I2C device
 
 public:
-    I2C(std::string path, int addrIn);
+    I2C(int addrIn);
     ~I2C();
-    const int openI2C(std::string busPath);
+    const int openI2C();
     const int closeI2C();
 
     const int readI2C(int numBytes, char buffer[]);

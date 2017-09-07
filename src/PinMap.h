@@ -15,4 +15,6 @@
 #define SERVO_PWM_MIN 500
 #define SERVO_PWM_MAX 1700
 
+#define RANGE_ADDR 29
+
 #endif

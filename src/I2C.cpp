@@ -1,19 +1,18 @@
 #include "I2C.h"
 
-I2C::I2C(std::string nameIn, int addrIn) {
-    I2C::name = nameIn;
+I2C::I2C(int addrIn) {
     I2C::addr = addrIn;
     // Open I2C bus
-    I2C::openI2C((I2C::path + I2C::name));
+    I2C::openI2C();
 }
 
 I2C::~I2C() {
     I2C::closeI2C();
 }
 
-const int I2C::openI2C(std::string busPath) {
-    if (I2C::fd = open((busPath).c_str(), O_RDWR) < 0) {
-        std::cout << "[I2C] Failed to open I2C bus \"" << I2C::name << "\". Exiting..." << std::endl;
+const int I2C::openI2C() {
+    if (I2C::fd = open("/dev/i2c-1", O_RDWR) < 0) {
+        std::cout << "[I2C] Failed to open I2C bus. Exiting..." << std::endl;
         exit(-1);
     }
     if (ioctl(fd, I2C_SLAVE, addr) < 0) {
