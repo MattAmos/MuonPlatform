@@ -38,6 +38,12 @@ struct Sensors {
     GPIO pir   = GPIO(std::to_string(PIR));
     void init() {
         servo.setPWMRange(SERVO_PWM_MIN, SERVO_PWM_MAX);
+        dc_1a.setDirGPIO("out");
+        dc_4a.setDirGPIO("out");
+        dc_2a.setDirGPIO("out");
+        dc_3a.setDirGPIO("out");
+        servo.setDirGPIO("out");
+        pir.setDirGPIO("in");
     }
     void drivePWM(){
 
