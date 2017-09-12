@@ -19,11 +19,11 @@ int main(int argc, char** argv) {
 
     // Setup GPIO interface
 
-    char buff[9];
+/*   char buff[9];
     while (true) {
         readI2C(8, buff);
         std::cout << "Output: " << buff << std::endl;
     }
-
+*/
     return 0;
 }
