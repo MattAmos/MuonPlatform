@@ -7,7 +7,7 @@
 #ifndef RUNNER_H
 #define RUNNER_H
 
-#define NUM_THREADS 2
+#define NUM_THREADS 3
 
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
@@ -22,11 +22,15 @@
 #include <csignal>
 #include <cstdio>
 #include <cstring>
+#include <wiringPi.h>
 
 #include "../include/joystick/joystick.cc"
 #include "GPIO.cpp"
 #include "I2C.cpp"
 #include "PinMap.h"
+#include "Sonic.cpp"
+#include "Ranger.cpp"
+#include "Gyrometer.cpp"
 
 // Store all config values and other important global variables here
 struct Sensors {
@@ -64,6 +68,8 @@ int currCh;
 Joystick joystick("/dev/input/js0");
 JoystickEvent event;
 int mid_t = (SERVO_PWM_MAX + SERVO_PWM_MIN) / 2.0;
+
+bool contFlag = false;
 
 // Networking config parameters
 std::string IMG_DIR = "~/images/";   // Image directory to copy into

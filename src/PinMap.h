@@ -11,10 +11,14 @@
 #define PIR 17
 
 // Servo Motor Pin
-#define SERVO 25
+#define SERVO 16
 #define SERVO_PWM_MIN 500
 #define SERVO_PWM_MAX 1700
 
-#define RANGE_ADDR 0x29
+// Sonic Echo, Trig Pins
+#define TRIG1	24
+#define ECHO1 	25
+
+#define RANGE_ADDR 0x68
 
 #endif
