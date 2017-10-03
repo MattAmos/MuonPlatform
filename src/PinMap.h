@@ -3,7 +3,7 @@
 
 // DC Motor Pins
 #define DC_1A 26
-#define DC_4A 20
+#define DC_4A 13
 #define DC_2A 19
 #define DC_3A 16
 
@@ -18,6 +18,8 @@
 // Sonic Echo, Trig Pins
 #define TRIG1	24
 #define ECHO1 	25
+#define TRIG2   20
+#define ECHO2   21
 
 #define RANGE_ADDR 0x68
 

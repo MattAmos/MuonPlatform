@@ -101,15 +101,17 @@ void* test_thread(void* threadid)
         {
             int distance = rFinder.getDistanceMM();
             int rear = 9999;
-            int left;
-            int right;
+            int left = 0;
+            int right = 0;
             if(distance>0 && distance < 560)    //if something infront is within the minimum 90 deg turning distance
             {
-                while(distance < 560 && rear > 10)  //backup until a turn can be made
+		std::cout << "Object detected" << std::endl;
+                while(distance < 560 && rear > 15)  //backup until a turn can be made
                 {
                     distance = rFinder.getDistanceMM();
-                //    rear = ultraBack.getCM();
-                    sensors.dc_2a.setValGPIO("1");
+                    rear = ultraBack.getCM();
+                    std::cout << "Rear: " << rear << std::endl;
+		    sensors.dc_2a.setValGPIO("1");
                     sensors.dc_3a.setValGPIO("1");
                     sensors.dc_1a.setValGPIO("0");
                     sensors.dc_4a.setValGPIO("0");
@@ -119,16 +121,19 @@ void* test_thread(void* threadid)
                 sensors.dc_4a.setValGPIO("0");
                 sensors.dc_2a.setValGPIO("0");
                 sensors.dc_3a.setValGPIO("0"); 
-                // usleep(1000000);
+                //usleep(1000000);
                 distance = rFinder.getDistanceMM();
-                if(distance <560)   //if distance is still too small for a successful simple turn
+                std::cout << "Finished backing up" << std::endl;
+		if(distance <560)   //if distance is still too small for a successful simple turn
                 {
+		    std::cout << "Do something" << std::endl;
                     //figure something out
                 }
                 else
                 {
-                    std::cout << distance << std::endl;
-                    while(true)
+                    std::cout << "Distance: " << distance << std::endl;
+                    /*
+		    while(true)
                     {
                          //check left and right sensors
                         //choose left by default, choose right if something's within the turning arc
@@ -138,7 +143,7 @@ void* test_thread(void* threadid)
                             sensors.servo.setPwmTime(SERVO_PWM_MAX);
                         }
                     }
-                   
+                   */
                 }
                 //crash mitigation
             }

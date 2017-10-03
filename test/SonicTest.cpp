@@ -5,26 +5,26 @@
  
 void setup() {
         wiringPiSetupGpio();
-        pinMode(TRIG, OUTPUT);
-        pinMode(ECHO, INPUT);
+        pinMode(TRIG2, OUTPUT);
+        pinMode(ECHO2, INPUT);
  
         //TRIG pin must start LOW
-        digitalWrite(TRIG, LOW);
+        digitalWrite(TRIG2, LOW);
         delay(30);
 }
  
 int getCM() {
         //Send trig pulse
-        digitalWrite(TRIG, HIGH);
+        digitalWrite(TRIG2, HIGH);
         delayMicroseconds(20);
-        digitalWrite(TRIG, LOW);
+        digitalWrite(TRIG2, LOW);
  
         //Wait for echo start
-        while(digitalRead(ECHO) == LOW);
+        while(digitalRead(ECHO2) == LOW);
  
         //Wait for echo end
         long startTime = micros();
-        while(digitalRead(ECHO) == HIGH);
+        while(digitalRead(ECHO2) == HIGH);
         long travelTime = micros() - startTime;
  
         //Get distance in cm
