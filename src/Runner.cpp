@@ -10,18 +10,14 @@ int scp(std::string filename) {
     return system(("scp " + IMG_DIR + "/" + filename + " " + USER + "@" + HOST + ":/home/IMG").c_str());
 }
 
-int kbhit()
-{
+bool kbhit(){
     int ch = getch();
-
-    if(ch!=ERR)
-    {
+    if(ch!=ERR){
         ungetch(ch);
-        return 1;
+        return true;
     }
-    else
-    {
-        return 0;
+    else{
+        return false;
     }
 }
 
@@ -30,7 +26,6 @@ void* pwm_thread(void* threadid) {
     tid                                                           = (long) threadid;
     std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
     std::time_t timePt                                            = std::chrono::high_resolution_clock::to_time_t(t);
-    std::cout << "Hello World! Thread ID, " << tid << " " << std::ctime(&timePt) << std::endl;
     while (true) {
         sensors.servo.setValGPIO("1");
         usleep(sensors.servo.getPwmTime());
@@ -124,7 +119,7 @@ void* test_thread(void* threadid)
                 sensors.dc_4a.setValGPIO("0");
                 sensors.dc_2a.setValGPIO("0");
                 sensors.dc_3a.setValGPIO("0"); 
-                usleep(1000000);
+                // usleep(1000000);
                 distance = rFinder.getDistanceMM();
                 if(distance <560)   //if distance is still too small for a successful simple turn
                 {
@@ -139,13 +134,8 @@ void* test_thread(void* threadid)
                         //choose left by default, choose right if something's within the turning arc
                         left = ultraBack.getCM(); //replace with actual sensor
                          //   right = ultraRight.getCM();
-                        if(left > 10)
-                        {
+                        if(left > 10){
                             sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                            sensors.servo.setValGPIO("1");
-                            usleep(sensors.servo.getPwmTime());
-                            sensors.servo.setValGPIO("0");
-                            usleep(20000 - sensors.servo.getPwmTime());
                         }
                     }
                    
@@ -171,13 +161,15 @@ int main(int argc, char** argv) {
     sensors.init();
     wiringPiSetupGpio();
 
+    //Setup curses
     initscr();
     cbreak();
     noecho();
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
  
-//    rc = pthread_create(&threads[0], NULL, pwm_thread, &i);
+    //Create our threads
+    rc = pthread_create(&threads[0], NULL, pwm_thread, &i);
     rc = pthread_create(&threads[1], NULL, inp_thread, &(++i));
     rc = pthread_create(&threads[2], NULL, test_thread, &(++i));
     pthread_exit(NULL);
