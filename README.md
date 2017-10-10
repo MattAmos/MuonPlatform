@@ -26,5 +26,8 @@ To login to the Raspberry Pi over the network, use SSH. Previously, the Raspberr
 In the MuonPlatform folder, create a new folder called build, i.e. `mkdir build`. Make sure cmake is installed with `sudo apt-get install cmake`, and within the build folder run `cmake ..`. This will now create a makefile within the build folder. If an error occurs while attempting to cmake, there exists an error within the project inclusions and linking. To see the current project build list and links to files, look in `MuonProject/CMakeLists.txt`. To actually build the code, run `make` within the build folder. The created binaries will be made in `MuonProject/bin`.
 Caution! To build for the Raspberry Pi, `set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=cortex-a53")` must be within the CMakeLists file, otherwise the build will think the Pi has no CPU!
 
+## Building with OpenCV support
+To allow for linking of OpenCV libraries, you must specify the OpenCV directory `~/opencv-2.4.13.3/build` within the cmake build. That is, within `MuonPlatform/build`, run `ccmake ..` and specify the OpenCV directory to be `~/opencv-2.4.13.3/build`.  
+
 ## Running code
 To actually run built binaries, root permissions must be allowed for anything interfacing with GPIO pins or I2C addresses. This can be accomplished by `sudo ./bin/<binary>`, e.g. `sudo ./bin/GPIOTest`
