@@ -35,7 +35,7 @@ add_executable( CVTest1	test/CVTest1.cpp)
 
 # Link External Library Dependencies
 target_link_libraries( Runner ${OpenCV_LIBRARIES} -lcurses -lpthread -lwiringPi /home/pi/MuonPlatform/libVL53L0X_Rasp.a  )
-target_link_libraries( CVTest1 ${OpenCV_LIBRARIES} )
+target_link_libraries( CVTest1 ${OpenCV_LIBRARIES} -I/usr/local/include/ -lraspicam -lraspicam_cv)
 # target_link_libraries( ServoKeyboard -lcurses)
 # target_link_libraries( GPIOTest -lcurses)
 # target_link_libraries( DCMotorTest -lcurses)
