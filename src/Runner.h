@@ -32,6 +32,8 @@
 #include "Ranger.cpp"
 #include "Gyrometer.cpp"
 
+enum Movement { DC_FRWD, DC_BACK, DC_STOP };
+
 // Store all config values and other important global variables here
 struct Sensors {
     GPIO dc_1a = GPIO(std::to_string(DC_1A));
@@ -53,6 +55,28 @@ struct Sensors {
         dc_3a.setValGPIO("0");
         dc_1a.setValGPIO("0");
         dc_4a.setValGPIO("0");
+    }
+    void dc_move(Movement m){
+	switch(m){
+	    case DC_FRWD:
+		dc_2a.setValGPIO("0");
+                dc_3a.setValGPIO("0");
+                dc_1a.setValGPIO("1");
+                dc_4a.setValGPIO("1");
+		break;
+	    case DC_BACK:
+		dc_1a.setValGPIO("0");
+                dc_4a.setValGPIO("0");
+		dc_2a.setValGPIO("1");
+                dc_3a.setValGPIO("1");
+		break;
+	    case DC_STOP:
+		dc_1a.setValGPIO("0");
+                dc_4a.setValGPIO("0");
+                dc_2a.setValGPIO("0");
+                dc_3a.setValGPIO("0"); 
+		break;
+	}
     }
     void destroy() {
         dc_1a.~GPIO();

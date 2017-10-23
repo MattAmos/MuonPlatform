@@ -3,6 +3,7 @@
 void signalHandler(int sigNum) {
     std::cout << "Interrupt signal (" << sigNum << ") received. Exiting gracefully..." << std::endl;
     sensors.destroy();
+    endwin();
     exit(sigNum);
 }
 
@@ -111,16 +112,10 @@ void* test_thread(void* threadid)
                     distance = rFinder.getDistanceMM();
                     rear = ultraBack.getCM();
                     std::cout << "Rear: " << rear << std::endl;
-		    sensors.dc_2a.setValGPIO("1");
-                    sensors.dc_3a.setValGPIO("1");
-                    sensors.dc_1a.setValGPIO("0");
-                    sensors.dc_4a.setValGPIO("0");
+		    sensors.dc_move(DC_BACK);
                 }
                 
-                sensors.dc_1a.setValGPIO("0");
-                sensors.dc_4a.setValGPIO("0");
-                sensors.dc_2a.setValGPIO("0");
-                sensors.dc_3a.setValGPIO("0"); 
+                sensors.dc_move(DC_STOP); 
                 //usleep(1000000);
                 distance = rFinder.getDistanceMM();
                 std::cout << "Finished backing up" << std::endl;
@@ -149,10 +144,7 @@ void* test_thread(void* threadid)
             }
             else
             {
-                sensors.dc_2a.setValGPIO("0");
-                sensors.dc_3a.setValGPIO("0");
-                sensors.dc_1a.setValGPIO("1");
-                sensors.dc_4a.setValGPIO("1");
+                sensors.dc_move(DC_FRWD);
                 //business as usual -- pwm to get lowest possible speed
             }
         }
