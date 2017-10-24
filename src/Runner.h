@@ -7,7 +7,7 @@
 #ifndef RUNNER_H
 #define RUNNER_H
 
-#define NUM_THREADS 3
+#define NUM_THREADS 4
 
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
@@ -36,6 +36,7 @@ enum Movement { DC_FRWD, DC_BACK, DC_STOP };
 
 // Store all config values and other important global variables here
 struct Sensors {
+    Movement move;
     GPIO dc_1a = GPIO(std::to_string(DC_1A));
     GPIO dc_4a = GPIO(std::to_string(DC_4A));
     GPIO dc_2a = GPIO(std::to_string(DC_2A));
@@ -63,10 +64,11 @@ struct Sensors {
         sonic_front.setup();
         sonic_right.setup();
 
+        move = DC_STOP;
         dc_move(DC_STOP);
     }
     void dc_move(Movement m){
-	switch(m){
+	switch(move){
 	    case DC_FRWD:
             dc_2a.setValGPIO("0");
             dc_3a.setValGPIO("0");

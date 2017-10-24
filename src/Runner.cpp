@@ -7,7 +7,7 @@ void signalHandler(int sigNum) {
     exit(sigNum);
 }
 
-int scp(std::string filename) {
+int scp(std::string filename){
     return system(("scp " + IMG_DIR + "/" + filename + " " + USER + "@" + HOST + ":/home/IMG").c_str());
 }
 
@@ -22,25 +22,27 @@ bool kbhit(){
     }
 }
 
-void* pwm_thread(void* threadid) {
-    long tid;
-    tid                                                           = (long) threadid;
-    std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
-    std::time_t timePt                                            = std::chrono::high_resolution_clock::to_time_t(t);
+void* servo_pwm_thread(void* threadid){
     while (true) {
         sensors.servo.setValGPIO("1");
         usleep(sensors.servo.getPwmTime());
         sensors.servo.setValGPIO("0");
         usleep(20000 - sensors.servo.getPwmTime());
     }
-
-    pthread_exit(NULL);
 }
 
-void* inp_thread(void* threadid) {
+void* dc_pwm_thread(void* threadid){
+    while(true) {
+        sensors.dc_move(sensors.move);
+        usleep(10000);
+        sensors.dc_move(DC_STOP);
+        usleep(20000);
+    }
+}
 
+void* inp_thread(void* threadid){
     while (true) {
-        if (joystick.isFound()) {
+        if (joystick.isFound()){
             if (joystick.sample(&event) && event.isAxis()) {
                 if (event.number == 0) {  // L3 HORIZONTAL
                     sensors.servo.setPwmTime(mid_t + (event.value / 65535.0) * (SERVO_PWM_MAX - SERVO_PWM_MIN));
@@ -60,18 +62,10 @@ void* inp_thread(void* threadid) {
                     case 'd': sensors.servo.incPwmTime(-100); break;
                     case 'A': sensors.servo.setPwmTime(SERVO_PWM_MAX); break;
                     case 'D': sensors.servo.setPwmTime(SERVO_PWM_MIN); break;
-                    case 'w':
-                        sensors.dc_move(DC_FRWD);
-                        break;
-                    case 's':
-                        sensors.dc_move(DC_BACK);
-                        break;
-                    case 32:
-                        sensors.dc_move(DC_STOP);
-                        break;
-                    case 27:
-                        contFlag = false;
-                        break;
+                    case 'w': sensors.move = DC_FRWD; break;
+                    case 's': sensors.move = DC_BACK; break;
+                    case 32:  sensors.move = DC_STOP; break;
+                    case 27:  contFlag = false; break;
                 }
             }
         }
@@ -81,57 +75,43 @@ void* inp_thread(void* threadid) {
 void* test_thread(void* threadid)
 {
     //Ranger rFinder = Ranger();
+    int frontDist, leftDist, rightDist, backDist;
+    while(true){
+        if(!kbhit()){
+            //Get sensors
+            frontDist = sensors.sonic_front.getCM();
+            leftDist  = sensors.sonic_left.getCM();
+            rightDist = sensors.sonic_right.getCM();
+            backDist  = sensors.sonic_back.getCM();
 
-    while(true)
-    {
-        if(!kbhit())
-        {
-            int distance = rFinder.getDistanceMM();
-            int rear = 9999;
-            int left = 0;
-            int right = 0;
-            if(distance>0 && distance < 560)    //if something infront is within the minimum 90 deg turning distance
-            {
-		std::cout << "Object detected" << std::endl;
-                while(distance < 560 && rear > 15)  //backup until a turn can be made
-                {
-                    distance = rFinder.getDistanceMM();
+            //If something is immediately in front of car
+            if(frontDist > 0 && frontDist < 56){
+                while(frontDist < 56 && backDist > 15){  //backup until a turn can be made
+                    frontDist = sensors.sonic_front.getCM();
                     rear = ultraBack.getCM();
-                    std::cout << "Rear: " << rear << std::endl;
-		    sensors.dc_move(DC_BACK);
+                    sensors.move = DC_BACK;
                 }
 
-                sensors.dc_move(DC_STOP);
-                //usleep(1000000);
-                distance = rFinder.getDistanceMM();
-                std::cout << "Finished backing up" << std::endl;
-		if(distance <560)   //if distance is still too small for a successful simple turn
-                {
-		    std::cout << "Do something" << std::endl;
-                    //figure something out
+                frontDist = sensors.sonic_front.getCM();
+
+                //Finished backing up
+                if(frontDist < 56){   //if distance is still too small for a successful simple turn
+                    //find which side has most room, go that way
+                    //If we have room on the left
+                    if(leftDist > rightDist)        { sensors.servo.setPwmTime(SERVO_PWM_MAX); }
+                    else if(rightDist > leftDist)   { sensors.servo.setPwmTime(SERVO_PWM_MIN); }
+                    else                            { sensors.servo.setPwmTime(SERVO_PWM_MID); }
                 }
-                else
-                {
-                    std::cout << "Distance: " << distance << std::endl;
-                    /*
-		    while(true)
-                    {
-                         //check left and right sensors
-                        //choose left by default, choose right if something's within the turning arc
-                        left = ultraBack.getCM(); //replace with actual sensor
-                         //   right = ultraRight.getCM();
-                        if(left > 10){
-                            sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                        }
-                    }
-                   */
-                }
-                //crash mitigation
+                sensors.move = DC_FRWD;
             }
-            else
-            {
-                sensors.dc_move(DC_FRWD);
-                //business as usual -- pwm to get lowest possible speed
+            else{
+                if(leftDist > rightDist + 5){
+                    sensors.servo.setPwmTime(SERVO_PWM_MAX);
+                }
+                else if(rightDist > leftDist + 5){
+                    sensors.servo.setPwmTime(SERVO_PWM_MIN)
+                }
+                sensors.move = DC_FRWD;
             }
         }
     }
@@ -140,7 +120,7 @@ void* test_thread(void* threadid)
 int main(int argc, char** argv) {
     signal(SIGINT, signalHandler);
     pthread_t threads[NUM_THREADS];
-    int rc, i = 0;
+    int rc[NUM_THREADS], i[NUM_THREADS];
     sensors.init();
     wiringPiSetupGpio();
 
@@ -152,9 +132,10 @@ int main(int argc, char** argv) {
     keypad(stdscr, TRUE);
 
     //Create our threads
-    rc = pthread_create(&threads[0], NULL, pwm_thread, &i);
-    rc = pthread_create(&threads[1], NULL, inp_thread, &(++i));
-    rc = pthread_create(&threads[2], NULL, test_thread, &(++i));
+    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, i[0]);
+    rc[1] = pthread_create(&threads[1], NULL, inp_thread,       i[1]);
+    rc[2] = pthread_create(&threads[2], NULL, test_thread,      i[2]);
+    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread,    i[3]);
     pthread_exit(NULL);
 
     return 0;

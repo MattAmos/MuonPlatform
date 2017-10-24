@@ -14,6 +14,7 @@
 #define SERVO 16
 #define SERVO_PWM_MIN 500
 #define SERVO_PWM_MAX 1700
+#define SERVO_PWM_MID 1100
 
 // Sonic Echo, Trig Pins
 #define TRIG1	24
