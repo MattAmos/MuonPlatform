@@ -38,7 +38,7 @@ void* pwm_thread(void* threadid) {
 }
 
 void* inp_thread(void* threadid) {
-    
+
     while (true) {
         if (joystick.isFound()) {
             if (joystick.sample(&event) && event.isAxis()) {
@@ -61,22 +61,13 @@ void* inp_thread(void* threadid) {
                     case 'A': sensors.servo.setPwmTime(SERVO_PWM_MAX); break;
                     case 'D': sensors.servo.setPwmTime(SERVO_PWM_MIN); break;
                     case 'w':
-                        sensors.dc_2a.setValGPIO("0");
-                        sensors.dc_3a.setValGPIO("0");
-                        sensors.dc_1a.setValGPIO("1");
-                        sensors.dc_4a.setValGPIO("1");
+                        sensors.dc_move(DC_FRWD);
                         break;
                     case 's':
-                        sensors.dc_1a.setValGPIO("0");
-                        sensors.dc_4a.setValGPIO("0");
-                        sensors.dc_2a.setValGPIO("1");
-                        sensors.dc_3a.setValGPIO("1");
+                        sensors.dc_move(DC_BACK);
                         break;
                     case 32:
-                        sensors.dc_1a.setValGPIO("0");
-                        sensors.dc_4a.setValGPIO("0");
-                        sensors.dc_2a.setValGPIO("0");
-                        sensors.dc_3a.setValGPIO("0");
+                        sensors.dc_move(DC_STOP);
                         break;
                     case 27:
                         contFlag = false;
@@ -89,12 +80,7 @@ void* inp_thread(void* threadid) {
 
 void* test_thread(void* threadid)
 {
-    Ranger rFinder = Ranger();
-    Sonic ultraBack = Sonic(ECHO1, TRIG1);
-//    Sonic ultraLeft = Sonic(ECHO2, TRIG2);
-//    Sonic ultraRight = Sonic(ECHO3, TRIG3);
-
-    ultraBack.setup();
+    //Ranger rFinder = Ranger();
 
     while(true)
     {
@@ -114,8 +100,8 @@ void* test_thread(void* threadid)
                     std::cout << "Rear: " << rear << std::endl;
 		    sensors.dc_move(DC_BACK);
                 }
-                
-                sensors.dc_move(DC_STOP); 
+
+                sensors.dc_move(DC_STOP);
                 //usleep(1000000);
                 distance = rFinder.getDistanceMM();
                 std::cout << "Finished backing up" << std::endl;
@@ -164,12 +150,12 @@ int main(int argc, char** argv) {
     noecho();
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
- 
+
     //Create our threads
     rc = pthread_create(&threads[0], NULL, pwm_thread, &i);
     rc = pthread_create(&threads[1], NULL, inp_thread, &(++i));
     rc = pthread_create(&threads[2], NULL, test_thread, &(++i));
     pthread_exit(NULL);
-  
+
     return 0;
 }

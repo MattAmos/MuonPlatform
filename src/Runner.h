@@ -42,6 +42,13 @@ struct Sensors {
     GPIO dc_3a = GPIO(std::to_string(DC_3A));
     GPIO servo = GPIO(std::to_string(SERVO));
     GPIO pir   = GPIO(std::to_string(PIR));
+
+    Sonic sonic_back  = Sonic(ECHO1, TRIG1);
+    Sonic sonic_left  = Sonic(ECHO2, TRIG2);
+    Sonic sonic_front = Sonic(ECHO3, TRIG3);
+    Sonic sonic_right = Sonic(ECHO4, TRIG4);
+
+    Gyrometer gyro = Gyrometer();
     void init() {
         servo.setPWMRange(SERVO_PWM_MIN, SERVO_PWM_MAX);
         dc_1a.setDirGPIO("out");
@@ -51,31 +58,33 @@ struct Sensors {
         servo.setDirGPIO("out");
         pir.setDirGPIO("in");
 
-        dc_2a.setValGPIO("0");
-        dc_3a.setValGPIO("0");
-        dc_1a.setValGPIO("0");
-        dc_4a.setValGPIO("0");
+        sonic_back.setup();
+        sonic_left.setup();
+        sonic_front.setup();
+        sonic_right.setup();
+
+        dc_move(DC_STOP);
     }
     void dc_move(Movement m){
 	switch(m){
 	    case DC_FRWD:
-		dc_2a.setValGPIO("0");
-                dc_3a.setValGPIO("0");
-                dc_1a.setValGPIO("1");
-                dc_4a.setValGPIO("1");
-		break;
+            dc_2a.setValGPIO("0");
+            dc_3a.setValGPIO("0");
+            dc_1a.setValGPIO("1");
+            dc_4a.setValGPIO("1");
+            break;
 	    case DC_BACK:
-		dc_1a.setValGPIO("0");
-                dc_4a.setValGPIO("0");
-		dc_2a.setValGPIO("1");
-                dc_3a.setValGPIO("1");
-		break;
+            dc_1a.setValGPIO("0");
+            dc_4a.setValGPIO("0");
+            dc_2a.setValGPIO("1");
+            dc_3a.setValGPIO("1");
+    		break;
 	    case DC_STOP:
-		dc_1a.setValGPIO("0");
-                dc_4a.setValGPIO("0");
-                dc_2a.setValGPIO("0");
-                dc_3a.setValGPIO("0"); 
-		break;
+    		dc_1a.setValGPIO("0");
+            dc_4a.setValGPIO("0");
+            dc_2a.setValGPIO("0");
+            dc_3a.setValGPIO("0");
+    		break;
 	}
     }
     void destroy() {
