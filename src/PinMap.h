@@ -20,6 +20,10 @@
 #define ECHO1 	25
 #define TRIG2   20
 #define ECHO2   21
+#define TRIG3   22
+#define ECHO3   27
+#define TRIG4   6
+#define ECHO4   5
 
 #define RANGE_ADDR 0x68
 
