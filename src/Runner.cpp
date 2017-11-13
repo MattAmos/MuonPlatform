@@ -34,17 +34,14 @@ void* servo_pwm_thread(void* threadid) {
     }
 }
 
-/*
 void* dc_pwm_thread(void* threadid){
     while(true) {
-
-        sensors.dc_move(sensors.move);
-        usleep(10000);
-        sensors.dc_move(DC_STOP);
-        usleep(20000);
+        sensors.dc_move(DC_FRWD);
+        //usleep(10000);
+        //sensors.dc_move(DC_STOP);
+        //usleep(20000);
     }
 }
-*/
 
 void* inp_thread(void* threadid) {
     while (true) {
@@ -138,7 +135,6 @@ void* cv_thread(void* threadid) {
 
     if (!face_cascade.load(face_cascade_name)) {
         std::cout << "Error loading face cascade" << std::endl;
-        return -1;
     }
 
     cv::Mat img = cv::imread("/dev/shm/mjpeg/cam.jpg"), img_gray;
@@ -152,7 +148,7 @@ void* cv_thread(void* threadid) {
         }
         auto start = std::chrono::system_clock::now();
         std::vector<cv::Rect> found, found_filtered, faces;
-        cvtColor(img, img_gray, CV_BGR2GRAY);
+        cv::cvtColor(img, img_gray, CV_BGR2GRAY);
         // equalizeHist(img_gray, img_gray);
         hog.detectMultiScale(img_gray, found, 0, cv::Size(4, 4), cv::Size(0, 0), 1.08, 3);
         face_cascade.detectMultiScale(img_gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(50, 50));
@@ -174,10 +170,10 @@ void* cv_thread(void* threadid) {
         */
         for (i = 0; i < found.size(); i++) {
             cv::Rect r = found[i];
-            r.x += cv::cvRound(r.width * 0.1);
-            r.width = cv::cvRound(r.width * 0.8);
-            r.y += cv::cvRound(r.height * 0.06);
-            r.height = cv::cvRound(r.height * 0.9);
+            r.x += cvRound(r.width * 0.1);
+            r.width = cvRound(r.width * 0.8);
+            r.y += cvRound(r.height * 0.06);
+            r.height = cvRound(r.height * 0.9);
             cv::rectangle(img, r.tl(), r.br(), cv::Scalar(0, 255, 0), 2);
         }
 
@@ -195,9 +191,8 @@ void* cv_thread(void* threadid) {
                         0);
         }
 
-        outputVideo.write(img);
         if (found.size() > 0 || faces.size() > 0) {
-            std::cout << "Found something" << std::endl;
+            std::cout << "Found " << found.size() << " people, " << faces.size() << " faces." <<  std::endl;
             nb_img++;
             /*stringstream ss("/var/www/bootstrap/");
             ss << "test";
@@ -210,24 +205,24 @@ void* cv_thread(void* threadid) {
             cv::imwrite(name, img);
             name.erase(0, 19);
             // add line 36 code for img
-            ofstream file("/var/www/bootstrap/main.php", ios::app);
+            std::ofstream file("/var/www/bootstrap/main.php", std::ios::app);
             if (file)  // if opened
             {
                 //////////////////
                 // place line36 //
                 //////////////////
-                file.seekp(1635, ios::beg);
-                file << " <div class=\"carousel-item\">" << endl;
-                file << "<img class=\"d-block w-100\" src=\"" << name << "\">" << endl;
-                file << "</div>" << endl;
+                file.seekp(1635, std::ios::beg);
+                file << " <div class=\"carousel-item\">" << std::endl;
+                file << "<img class=\"d-block w-100\" src=\"" << name << "\">" << std::endl;
+                file << "</div>" << std::endl;
 
                 // instruction
                 file.close();  // je referme le fichier
             }
             // write in mode.txt "ON" and erase everything else
-            ofstream f("/var/www/bootstrap/mode.txt", ios::out | ios::trunc);
+            std::ofstream f("/var/www/bootstrap/mode.txt", std::ios::out | std::ios::trunc);
             if (f) {  // if opened
-                f << "ON" << endl;
+                f << "ON" << std::endl;
                 // instructions
                 f.close();  // je referme le fichier
             }
@@ -238,9 +233,9 @@ void* cv_thread(void* threadid) {
         }
         else {
             // write in mode.txt "OFF" and erase everything else
-            ofstream f("/var/www/bootstrap/mode.txt", ios::out | ios::trunc);
+            std::ofstream f("/var/www/bootstrap/mode.txt", std::ios::out | std::ios::trunc);
             if (f) {  // if opened
-                f << "OFF" << endl;
+                f << "OFF" << std::endl;
                 // instructions
                 f.close();  // je referme le fichier
             }
@@ -249,7 +244,6 @@ void* cv_thread(void* threadid) {
         std::chrono::duration<double> elapsed = end - start;
         std::cout << "Time elapsed: " << elapsed.count() << "s\n" << std::endl;
     }
-    outputVideo.release();
 }
 
 int main(int argc, char** argv) {
@@ -266,12 +260,15 @@ int main(int argc, char** argv) {
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
 
+    sensors.dc_1.setValGPIO("1");
+    sensors.dc_2.setValGPIO("0");
+
     // Create our threads
-    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
-    rc[1] = pthread_create(&threads[1], NULL, inp_thread, &i[1]);
-    rc[2] = pthread_create(&threads[2], NULL, move_thread, &i[2]);
-//  rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &i[3]);
-    rc[4] = pthread_create(&threads[4], NULL, cv_thread, &i[4]);
+      rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
+      rc[1] = pthread_create(&threads[1], NULL, inp_thread, &i[1]);
+      rc[2] = pthread_create(&threads[2], NULL, move_thread, &i[2]);
+ //   rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &i[3]);
+      rc[4] = pthread_create(&threads[4], NULL, cv_thread, &i[4]);
     pthread_exit(NULL);
 
     return 0;

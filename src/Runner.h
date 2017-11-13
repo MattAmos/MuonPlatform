@@ -24,6 +24,8 @@
 #include <csignal>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
+#include <iostream>
 
 #include "../include/joystick/joystick.cc"
 #include "GPIO.cpp"
