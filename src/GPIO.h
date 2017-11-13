@@ -6,9 +6,11 @@
 #include <unistd.h>
 #include <iostream>
 #include <string>
+#include <pthread.h>
 
 class GPIO {
 private:
+    pthread_mutex_t mutex;
     const std::string EXPORT_DIR   = "/sys/class/gpio/export";
     const std::string UNEXPORT_DIR = "/sys/class/gpio/unexport";
     const std::string GPIO_DIR     = "/sys/class/gpio/gpio";

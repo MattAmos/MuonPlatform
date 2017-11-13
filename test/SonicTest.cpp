@@ -57,7 +57,7 @@ int main(void) {
 		result3 = getCM(TRIG3, ECHO3);
 		result4 = getCM(TRIG4, ECHO4);
 		//std::cout << "Got result 3" << std::endl;
-		std::cout << result1 << ", " << result2 << ", " << result3 << ", " << result4 << std::endl;
+		std::cout << "B:" << result1 << ", L:" << result2 << ", R:" << result3 << ", F:" << result4 << std::endl;
  	}
         return 0;
 }

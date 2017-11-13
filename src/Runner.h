@@ -46,8 +46,8 @@ struct Sensors {
 
     Sonic sonic_back  = Sonic(ECHO1, TRIG1);
     Sonic sonic_left  = Sonic(ECHO2, TRIG2);
-    Sonic sonic_front = Sonic(ECHO3, TRIG3);
-    Sonic sonic_right = Sonic(ECHO4, TRIG4);
+    Sonic sonic_right = Sonic(ECHO3, TRIG3);
+    Sonic sonic_front = Sonic(ECHO4, TRIG4);
 
     Gyrometer gyro = Gyrometer();
     void init() {

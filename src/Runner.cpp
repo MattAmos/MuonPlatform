@@ -85,14 +85,15 @@ void* test_thread(void* threadid)
             backDist  = sensors.sonic_back.getCM();
 
             //If something is immediately in front of car
+            std::cout << "Front: " << frontDist << std::endl;
             if(frontDist > 0 && frontDist < 56){
                 while(frontDist < 56 && backDist > 15){  //backup until a turn can be made
                     frontDist = sensors.sonic_front.getCM();
-                    rear = ultraBack.getCM();
+                    backDist  = sensors.sonic_back.getCM();
                     sensors.move = DC_BACK;
                 }
 
-                frontDist = sensors.sonic_front.getCM();
+      /*          frontDist = sensors.sonic_front.getCM();
 
                 //Finished backing up
                 if(frontDist < 56){   //if distance is still too small for a successful simple turn
@@ -109,10 +110,10 @@ void* test_thread(void* threadid)
                     sensors.servo.setPwmTime(SERVO_PWM_MAX);
                 }
                 else if(rightDist > leftDist + 5){
-                    sensors.servo.setPwmTime(SERVO_PWM_MIN)
+                    sensors.servo.setPwmTime(SERVO_PWM_MIN);
                 }
                 sensors.move = DC_FRWD;
-            }
+        */    }
         }
     }
 }
@@ -132,10 +133,10 @@ int main(int argc, char** argv) {
     keypad(stdscr, TRUE);
 
     //Create our threads
-    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, i[0]);
-    rc[1] = pthread_create(&threads[1], NULL, inp_thread,       i[1]);
-    rc[2] = pthread_create(&threads[2], NULL, test_thread,      i[2]);
-    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread,    i[3]);
+    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
+    rc[1] = pthread_create(&threads[1], NULL, inp_thread,       &i[1]);
+    rc[2] = pthread_create(&threads[2], NULL, test_thread,      &i[2]);
+    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread,    &i[3]);
     pthread_exit(NULL);
 
     return 0;
