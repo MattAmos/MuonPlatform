@@ -22,24 +22,39 @@ bool kbhit() {
     }
 }
 
+void forward() {
+    dc_2.setValGPIO("0");
+    dc_1.setValGPIO("1");
+}
+
+void backward() {
+    dc_1.setValGPIO("0");
+    dc_2.setValGPIO("1");
+}
+
+void stop() {
+    dc_2.setValGPIO("0");
+    dc_1.setValGPIO("0");
+}
+
 void* servo_pwm_thread(void* threadid) {
     while (true) {
-    	 pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex);
         sensors.servo.setValGPIO("1");
         usleep(sensors.servo.getPwmTime());
         sensors.servo.setValGPIO("0");
         usleep(20000 - sensors.servo.getPwmTime());
-         pthread_mutex_unlock(&mutex);
-     usleep(1000);
+        pthread_mutex_unlock(&mutex);
+        usleep(1000);
     }
 }
 
-void* dc_pwm_thread(void* threadid){
-    while(true) {
+void* dc_pwm_thread(void* threadid) {
+    while (true) {
         sensors.dc_move(DC_FRWD);
-        //usleep(10000);
-        //sensors.dc_move(DC_STOP);
-        //usleep(20000);
+        // usleep(10000);
+        // sensors.dc_move(DC_STOP);
+        // usleep(20000);
     }
 }
 
@@ -64,10 +79,10 @@ void* inp_thread(void* threadid) {
                     case 'd': sensors.servo.incPwmTime(-100); break;
                     case 'A': sensors.servo.setPwmTime(SERVO_PWM_MAX); break;
                     case 'D': sensors.servo.setPwmTime(SERVO_PWM_MIN); break;
-                    case 'w': sensors.move = DC_FRWD; break;
-                    case 's': sensors.move = DC_BACK; break;
-                    case 32: sensors.move  = DC_STOP; break;
-                    case 27: contFlag      = false; break;
+                    case 'w': forward(); break;
+                    case 's': backward(); break;
+                    case 32: stop(); break;
+                    case 27: contFlag = false; break;
                 }
             }
         }
@@ -77,28 +92,26 @@ void* inp_thread(void* threadid) {
 void* move_thread(void* threadid) {
     // Ranger rFinder = Ranger();
     int frontDist, leftDist, rightDist, backDist;
-    
-    while (true) {
-        //if (!kbhit()) {
-            // Get sensors
-            frontDist = sensors.sonic_front.getCM();
-            leftDist  = sensors.sonic_left.getCM();
-            rightDist = sensors.sonic_right.getCM();
-            backDist  = sensors.sonic_back.getCM();
-            
-	    pthread_mutex_lock(&mutex);
-            //If something is immediately in front of car
-            std::cout << "Front: " << frontDist << std::endl;
-            if(frontDist > 0 && frontDist < 56)
-            {
-                while(frontDist < 56 && backDist > 15)
-                {  //backup until a turn can be made
-                    frontDist = sensors.sonic_front.getCM();
-                    backDist  = sensors.sonic_back.getCM();
 
-                    sensors.move = DC_BACK;
-                }
-           	
+    while (true) {
+        // if (!kbhit()) {
+        // Get sensors
+        frontDist = sensors.sonic_front.getCM();
+        leftDist  = sensors.sonic_left.getCM();
+        rightDist = sensors.sonic_right.getCM();
+        backDist  = sensors.sonic_back.getCM();
+
+        pthread_mutex_lock(&mutex);
+        // If something is immediately in front of car
+        std::cout << "Front: " << frontDist << std::endl;
+        if (frontDist > 0 && frontDist < 56) {
+            while (frontDist < 56 && backDist > 15) {  // backup until a turn can be made
+                frontDist = sensors.sonic_front.getCM();
+                backDist  = sensors.sonic_back.getCM();
+
+                backward();
+            }
+
       /*          frontDist = sensors.sonic_front.getCM();
 
                 //Finished backing up
@@ -109,7 +122,7 @@ void* move_thread(void* threadid) {
                     else if(rightDist > leftDist)   { sensors.servo.setPwmTime(SERVO_PWM_MIN); }
                     else                            { sensors.servo.setPwmTime(SERVO_PWM_MID); }
                 }
-                sensors.move = DC_FRWD;
+                forward();
             }
             else{
                 if(leftDist > rightDist + 5){
@@ -118,10 +131,10 @@ void* move_thread(void* threadid) {
                 else if(rightDist > leftDist + 5){
                     sensors.servo.setPwmTime(SERVO_PWM_MIN);
                 }
-                sensors.move = DC_FRWD;
+                forward();
         */    }
-            pthread_mutex_unlock(&mutex);
-            usleep(1000);
+      pthread_mutex_unlock(&mutex);
+      usleep(1000);
       //  }
     }
 }
@@ -192,7 +205,7 @@ void* cv_thread(void* threadid) {
         }
 
         if (found.size() > 0 || faces.size() > 0) {
-            std::cout << "Found " << found.size() << " people, " << faces.size() << " faces." <<  std::endl;
+            std::cout << "Found " << found.size() << " people, " << faces.size() << " faces." << std::endl;
             nb_img++;
             /*stringstream ss("/var/www/bootstrap/");
             ss << "test";
@@ -260,15 +273,14 @@ int main(int argc, char** argv) {
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
 
-    sensors.dc_1.setValGPIO("1");
-    sensors.dc_2.setValGPIO("0");
+    forward();
 
     // Create our threads
-      rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
-      rc[1] = pthread_create(&threads[1], NULL, inp_thread, &i[1]);
-      rc[2] = pthread_create(&threads[2], NULL, move_thread, &i[2]);
- //   rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &i[3]);
-      rc[4] = pthread_create(&threads[4], NULL, cv_thread, &i[4]);
+    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
+    rc[1] = pthread_create(&threads[1], NULL, inp_thread, &i[1]);
+    rc[2] = pthread_create(&threads[2], NULL, move_thread, &i[2]);
+    //   rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &i[3]);
+    rc[4] = pthread_create(&threads[4], NULL, cv_thread, &i[4]);
     pthread_exit(NULL);
 
     return 0;
