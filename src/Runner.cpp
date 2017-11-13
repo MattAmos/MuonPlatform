@@ -24,13 +24,16 @@ bool kbhit(){
 
 void* servo_pwm_thread(void* threadid){
     while (true) {
+    	 pthread_mutex_lock(&mutex);
         sensors.servo.setValGPIO("1");
         usleep(sensors.servo.getPwmTime());
         sensors.servo.setValGPIO("0");
         usleep(20000 - sensors.servo.getPwmTime());
+         pthread_mutex_unlock(&mutex);
+     usleep(1000);
     }
 }
-
+/*
 void* dc_pwm_thread(void* threadid){
     while(true) {
         sensors.dc_move(sensors.move);
@@ -39,7 +42,7 @@ void* dc_pwm_thread(void* threadid){
         usleep(20000);
     }
 }
-
+*/
 void* inp_thread(void* threadid){
     while (true) {
         if (joystick.isFound()){
@@ -77,22 +80,24 @@ void* test_thread(void* threadid)
     //Ranger rFinder = Ranger();
     int frontDist, leftDist, rightDist, backDist;
     while(true){
-        if(!kbhit()){
+    //   if(!kbhit()){
             //Get sensors
             frontDist = sensors.sonic_front.getCM();
             leftDist  = sensors.sonic_left.getCM();
             rightDist = sensors.sonic_right.getCM();
             backDist  = sensors.sonic_back.getCM();
-
+             pthread_mutex_lock(&mutex);
             //If something is immediately in front of car
             std::cout << "Front: " << frontDist << std::endl;
-            if(frontDist > 0 && frontDist < 56){
-                while(frontDist < 56 && backDist > 15){  //backup until a turn can be made
+            if(frontDist > 0 && frontDist < 56)
+            {
+                while(frontDist < 56 && backDist > 15)
+                {  //backup until a turn can be made
                     frontDist = sensors.sonic_front.getCM();
                     backDist  = sensors.sonic_back.getCM();
                     sensors.move = DC_BACK;
                 }
-
+           	
       /*          frontDist = sensors.sonic_front.getCM();
 
                 //Finished backing up
@@ -114,7 +119,9 @@ void* test_thread(void* threadid)
                 }
                 sensors.move = DC_FRWD;
         */    }
-        }
+                 pthread_mutex_unlock(&mutex);
+            usleep(1000);
+      //  }
     }
 }
 
@@ -136,7 +143,7 @@ int main(int argc, char** argv) {
     rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
     rc[1] = pthread_create(&threads[1], NULL, inp_thread,       &i[1]);
     rc[2] = pthread_create(&threads[2], NULL, test_thread,      &i[2]);
-    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread,    &i[3]);
+ //   rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread,    &i[3]);
     pthread_exit(NULL);
 
     return 0;
