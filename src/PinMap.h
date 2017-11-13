@@ -3,7 +3,7 @@
 
 // DC Motor Pins
 #define DC_1 26
-#define DC_2 16
+#define DC_2 19
 
 // PIR Motion Sensor
 #define PIR 17
