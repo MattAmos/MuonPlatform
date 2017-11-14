@@ -8,6 +8,8 @@
 #define RUNNER_H
 
 #define NUM_THREADS 5
+#define NUM_SAMP 5
+#define INV_NUM_SAMP 0.2
 
 #include <eigen3/Eigen/Core>
 #include <opencv2/opencv.hpp>
@@ -51,11 +53,11 @@ struct Sensors {
     Sonic sonic_front = Sonic(ECHO4, TRIG4);
 
     Gyrometer gyro = Gyrometer();
-    void sonicInit(){
-	sonic_back.setup();
-	sonic_left.setup();
-	sonic_right.setup();
-	sonic_front.setup();
+    void sonicInit() {
+        sonic_back.setup();
+        sonic_left.setup();
+        sonic_right.setup();
+        sonic_front.setup();
     }
 
     void init() {
