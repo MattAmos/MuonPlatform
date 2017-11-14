@@ -96,7 +96,7 @@ JoystickEvent event;
 int mid_t = (SERVO_PWM_MAX + SERVO_PWM_MIN) / 2.0;
 
 bool contFlag = false;
-pthread_mutex_t mutex;
+pthread_mutex_t mutex, dc_mut;
 
 // Networking config parameters
 std::string IMG_DIR = "~/images/";   // Image directory to copy into

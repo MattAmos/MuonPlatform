@@ -51,10 +51,12 @@ void* servo_pwm_thread(void* threadid) {
 
 void* dc_pwm_thread(void* threadid) {
     while (true) {
-        sensors.dc_move(DC_FRWD);
-        // usleep(10000);
-        // sensors.dc_move(DC_STOP);
-        // usleep(20000);
+        pthread_mutex_lock(&dc_mut);
+        sensors.dc_move(sensors.move);
+        pthread_mutex_unlock(&dc_mut);
+        usleep(5000);
+        sensors.dc_move(DC_STOP);
+        usleep(3000);
     }
 }
 
@@ -75,10 +77,14 @@ void* inp_thread(void* threadid) {
                 sensors.servo.setPwmTime(SERVO_PWM_MIN);
             }
             if (second == "front") {
-                forward();
+                pthread_mutex_lock(&dc_mut);
+                sensors.move = DC_FRWD;
+                pthread_mutex_unlock(&dc_mut);
             }
             else if (second == "back") {
-                backward();
+                pthread_mutex_lock(&dc_mut);
+                sensors.move = DC_BACK;
+                pthread_mutex_unlock(&dc_mut);
             }
         }
         // If we have one command (<front/back/auto>)
@@ -86,10 +92,14 @@ void* inp_thread(void* threadid) {
             if (first != "auto") {
                 sensors.servo.setPwmTime(SERVO_PWM_MID);
                 if (first == "front") {
-                    forward();
+                    pthread_mutex_lock(&dc_mut);
+                    sensors.move = DC_FRWD;
+                    pthread_mutex_unlock(&dc_mut);
                 }
                 else if (first == "back") {
-                    backward();
+                    pthread_mutex_lock(&dc_mut);
+                    sensors.move = DC_BACK;
+                    pthread_mutex_unlock(&dc_mut);
                 }
             }
             else {
@@ -118,9 +128,21 @@ void* inp_thread(void* threadid) {
                     case 'd': sensors.servo.incPwmTime(-100); break;
                     case 'A': sensors.servo.setPwmTime(SERVO_PWM_MAX); break;
                     case 'D': sensors.servo.setPwmTime(SERVO_PWM_MIN); break;
-                    case 'w': forward(); break;
-                    case 's': backward(); break;
-                    case 32: stop(); break;
+                    case 'w':
+                        pthread_mutex_unlock(&dc_mut);
+                        sensors.move = DC_FRWD;
+                        pthread_mutex_unlock(&dc_mut);
+                        break;
+                    case 's':
+                        pthread_mutex_unlock(&dc_mut);
+                        sensors.move = DC_BACK;
+                        pthread_mutex_unlock(&dc_mut);
+                        break;
+                    case 32:
+                        pthread_mutex_unlock(&dc_mut);
+                        sensors.move = DC_STOP;
+                        pthread_mutex_unlock(&dc_mut);
+                        break;
                     case 27: contFlag = false; break;
                 }
             }
@@ -148,7 +170,9 @@ void* move_thread(void* threadid) {
                 frontDist = sensors.sonic_front.getCM();
                 backDist  = sensors.sonic_back.getCM();
 
-                backward();
+                pthread_mutex_lock(&dc_mut);
+                sensors.move = DC_BACK;
+                pthread_mutex_unlock(&dc_mut);
             }
 
       /*          frontDist = sensors.sonic_front.getCM();
@@ -161,7 +185,7 @@ void* move_thread(void* threadid) {
                     else if(rightDist > leftDist)   { sensors.servo.setPwmTime(SERVO_PWM_MIN); }
                     else                            { sensors.servo.setPwmTime(SERVO_PWM_MID); }
                 }
-                forward();
+                sensors.move = DC_FRWD;
             }
             else{
                 if(leftDist > rightDist + 5){
@@ -170,7 +194,7 @@ void* move_thread(void* threadid) {
                 else if(rightDist > leftDist + 5){
                     sensors.servo.setPwmTime(SERVO_PWM_MIN);
                 }
-                forward();
+                sensors.move = DC_FRWD;
         */    }
       pthread_mutex_unlock(&mutex);
       usleep(1000);
@@ -306,19 +330,19 @@ int main(int argc, char** argv) {
     wiringPiSetupGpio();
 
     // Setup curses
-    initscr();
-    cbreak();
-    noecho();
-    nodelay(stdscr, TRUE);
-    keypad(stdscr, TRUE);
+    // initscr();
+    // cbreak();
+    // noecho();
+    // nodelay(stdscr, TRUE);
+    // keypad(stdscr, TRUE);
 
-    forward();
+    sensors.move = DC_FRWD;
 
     // Create our threads
     rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
     rc[1] = pthread_create(&threads[1], NULL, inp_thread, &i[1]);
     rc[2] = pthread_create(&threads[2], NULL, move_thread, &i[2]);
-    //   rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &i[3]);
+    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &i[3]);
     rc[4] = pthread_create(&threads[4], NULL, cv_thread, &i[4]);
     pthread_exit(NULL);
 
