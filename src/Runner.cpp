@@ -54,9 +54,9 @@ void* dc_pwm_thread(void* threadid) {
         pthread_mutex_lock(&dc_mut);
         sensors.dc_move(sensors.move);
         pthread_mutex_unlock(&dc_mut);
-        usleep(5000);
+        usleep(1000);
         sensors.dc_move(DC_STOP);
-        usleep(3000);
+        usleep(5000);
     }
 }
 
@@ -153,31 +153,38 @@ void* inp_thread(void* threadid) {
 void* move_thread(void* threadid) {
     // Ranger rFinder = Ranger();
     int frontDist, leftDist, rightDist, backDist;
-    sensors.move = DC_FRWD;  // 1.Go forward
     srand(NULL);
     // so far, the logic is:
     // 1. It goes forward
     // 2. If something's within 56 cm, reverse -> if something's behind it within 15cm, or it reverses outside of the
     // 56cm mark leave the loop
     // 2a. After loop, it checks which direction it goes
-
+    int count = 0;
     while (true) {
+	count++;
+	if(count % 500 == 0){ sensors.sonicInit(); }
         // if (!kbhit()) {
         // Get sensors
         frontDist = sensors.sonic_front.getCM();
         leftDist  = sensors.sonic_left.getCM();
         rightDist = sensors.sonic_right.getCM();
         backDist  = sensors.sonic_back.getCM();
+	printf("F %03d, L %03d, R %03d, B %03d\n", frontDist, leftDist, rightDist, backDist);
 
         pthread_mutex_lock(&mutex);
-        if (frontDist > 0 && frontDist < 56)  // 2. check if <56 cm front
+	int avg = frontDist + leftDist + rightDist;
+        if (frontDist < 56 || leftDist < 56 || rightDist < 56)  // 2. check if <56 cm front
         {
-            while (frontDist < 56 && backDist > 15)  // 2a. reverse until out of range
+	    while (((avg = frontDist + leftDist + rightDist) < 500 || (frontDist < 56 || leftDist < 56 || rightDist << 56)) && backDist > 15)  // 2a. reverse until out of range
             {
                 frontDist = sensors.sonic_front.getCM();
-                backDist  = sensors.sonic_back.getCM();
+                leftDist  = sensors.sonic_left.getCM();
+		rightDist = sensors.sonic_right.getCM();
+		backDist  = sensors.sonic_back.getCM();
 
-                pthread_mutex_lock(&dc_mut);
+		printf("F %03d, L %03d, R %03d, B %03d\n", frontDist, leftDist, rightDist, backDist);
+                
+		pthread_mutex_lock(&dc_mut);
                 sensors.move = DC_BACK;
                 pthread_mutex_unlock(&dc_mut);
                 //                backward();
@@ -188,7 +195,11 @@ void* move_thread(void* threadid) {
 
             // 2b. choose direction
             //  stop();
-            if (leftDist > 2000 && rightDist > 2000) {
+            pthread_mutex_lock(&dc_mut);
+	    sensors.move = DC_STOP;
+	    pthread_mutex_unlock(&dc_mut);
+
+	    if (leftDist > 2000 && rightDist > 2000) {
                 if (rand() < 0.5) {
                     std::cout << "RMAX " << leftDist << " " << rightDist << std::endl;
                     sensors.servo.setPwmTime(SERVO_PWM_MAX);
@@ -234,12 +245,16 @@ void* move_thread(void* threadid) {
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
-
+	    pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;  // go forward
-        }
+            pthread_mutex_unlock(&dc_mut);
+	}
         else  // 3. reset to forward position when all fine
         {
-            sensors.servo.setPwmTime(SERVO_PWM_MID);
+	    pthread_mutex_lock(&dc_mut);
+            sensors.move = DC_FRWD;
+	    pthread_mutex_unlock(&dc_mut);
+	    sensors.servo.setPwmTime(SERVO_PWM_MID);
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);

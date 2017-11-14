@@ -51,6 +51,13 @@ struct Sensors {
     Sonic sonic_front = Sonic(ECHO4, TRIG4);
 
     Gyrometer gyro = Gyrometer();
+    void sonicInit(){
+	sonic_back.setup();
+	sonic_left.setup();
+	sonic_right.setup();
+	sonic_front.setup();
+    }
+
     void init() {
         servo.setPWMRange(SERVO_PWM_MIN, SERVO_PWM_MAX);
         dc_1.setDirGPIO("out");
@@ -58,10 +65,7 @@ struct Sensors {
         servo.setDirGPIO("out");
         pir.setDirGPIO("in");
 
-        sonic_back.setup();
-        sonic_left.setup();
-        sonic_front.setup();
-        sonic_right.setup();
+        sonicInit();
 
         move = DC_STOP;
         dc_move(DC_STOP);
