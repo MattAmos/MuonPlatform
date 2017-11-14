@@ -123,7 +123,7 @@ void* inp_thread(void* threadid) {
             // Check keyboard control
             if (kbhit()) {
                 contFlag = true;
-                ch   = getch();
+                ch       = getch();
                 switch (ch) {
                     case 'a': sensors.servo.incPwmTime(100); break;
                     case 'd': sensors.servo.incPwmTime(-100); break;
@@ -160,7 +160,7 @@ int getAvg(int d[NUM_SAMP]) {
     return result;
 }
 
-void turn(int ld, int rd){
+void turn(int ld, int rd) {
     if (ld > 2000 && rd > 2000) {
         if (rand() < 0.5) {
             std::cout << "RMAX " << ld << " " << rd << std::endl;
@@ -181,9 +181,9 @@ void turn(int ld, int rd){
     }
     else {
         if (abs(ld - rd) < 5) {
- //           sensors.servo.setPwmTime(SERVO_PWM_MID);
-	    
-	    if (rand() < 0.5) {
+            //           sensors.servo.setPwmTime(SERVO_PWM_MID);
+
+            if (rand() < 0.5) {
                 std::cout << "RMAX " << ld << " " << rd << std::endl;
                 sensors.servo.setPwmTime(SERVO_PWM_MAX);
             }
@@ -191,7 +191,6 @@ void turn(int ld, int rd){
                 std::cout << "RMIN " << ld << " " << rd << std::endl;
                 sensors.servo.setPwmTime(SERVO_PWM_MIN);
             }
-	    
         }
         else if (ld > rd) {
             std::cout << "MAX " << ld << " " << rd << std::endl;
@@ -222,7 +221,7 @@ void* move_thread(void* threadid) {
     int fdStop = 56;
     while (true) {
         count++;
-        //if (count % 3000 == 0) {
+        // if (count % 3000 == 0) {
         //    sensors.sonicInit();
         //}
         // if (!kbhit()) {
@@ -240,14 +239,16 @@ void* move_thread(void* threadid) {
         printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
 
         pthread_mutex_lock(&mutex);
-        if (fd < fdStop || (fd < fdStop + 20 && ld < 60) || (fdStop + 20 < 100 && rd < 60) || (ld < 15) || (rd < 15))  // 2. check if <56 cm front
+        if (fd < fdStop || (fd < fdStop + 20 && ld < 60) || (fdStop + 20 < 100 && rd < 60) || (ld < 15)
+            || (rd < 15))  // 2. check if <56 cm front
         {
-	    fdStop = 56;
-            while (((fd < fdStop || (fd + 20 < fdStop && ld < 60) || (fd + 20 < fdStop && rd < 60) || (ld < 15) || (rd < 15)))
+            fdStop = 56;
+            while (((fd < fdStop || (fd + 20 < fdStop && ld < 60) || (fd + 20 < fdStop && rd < 60) || (ld < 15)
+                     || (rd < 15)))
                    && bd > 10)  // 2a. reverse until out of range
             {
-		count++;
-	//	if(count % 3000 == 0){ sensors.sonicInit(); }
+                count++;
+                //  if(count % 3000 == 0){ sensors.sonicInit(); }
                 frontDist[count % NUM_SAMP] = sensors.sonic_front.getCM();
                 leftDist[count % NUM_SAMP]  = sensors.sonic_left.getCM();
                 rightDist[count % NUM_SAMP] = sensors.sonic_right.getCM();
@@ -259,12 +260,12 @@ void* move_thread(void* threadid) {
                 bd = getAvg(backDist);
 
                 printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
-		turn(ld, rd);
+                turn(ld, rd);
                 pthread_mutex_lock(&dc_mut);
                 sensors.move = DC_BACK;
                 pthread_mutex_unlock(&dc_mut);
-                usleep(50); 
-	       //                backward();
+                usleep(50);
+                //                backward();
             }
 
             ld = sensors.sonic_left.getCM();
@@ -275,28 +276,28 @@ void* move_thread(void* threadid) {
             pthread_mutex_lock(&dc_mut);
             sensors.move = DC_STOP;
             pthread_mutex_unlock(&dc_mut);
-	    usleep(1000);	
+            usleep(1000);
 
-	    turn(ld, rd);
+            turn(ld, rd);
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
             pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;  // go forward
             pthread_mutex_unlock(&dc_mut);
-	    usleep(50);
+            usleep(50);
         }
         else  // 3. reset to forward position when all fine
         {
-	    turn(ld, rd);
+            turn(ld, rd);
             pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;
             pthread_mutex_unlock(&dc_mut);
-	    usleep(50);
+            usleep(50);
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
-	    fdStop = 80;
+            fdStop = 80;
         }
         pthread_mutex_unlock(&mutex);
         usleep(1000);
@@ -329,7 +330,7 @@ void* cv_thread(void* threadid) {
             std::cout << "No image data. Continuing..." << std::endl;
             break;
         }
- //       auto start = std::chrono::system_clock::now();
+        //       auto start = std::chrono::system_clock::now();
         cv::cvtColor(img, img_gray, CV_BGR2GRAY);
         // equalizeHist(img_gray, img_gray);
         hog.detectMultiScale(img_gray, found, 0, cv::Size(4, 4), cv::Size(0, 0), 1.08, 3);
@@ -359,7 +360,7 @@ void* cv_thread(void* threadid) {
         }
 
         for (size_t k = 0; k < faces.size(); k++) {
-	    centre = cv::Point(faces[i].x + faces[i].width * 0.5, faces[i].y + faces[i].height * 0.5);
+            centre = cv::Point(faces[i].x + faces[i].width * 0.5, faces[i].y + faces[i].height * 0.5);
             cv::ellipse(img,
                         centre,
                         cv::Size(faces[i].width * 0.5, faces[i].height * 0.5),
@@ -421,9 +422,9 @@ void* cv_thread(void* threadid) {
                 f.close();  // je referme le fichier
             }
         }
- //       auto end                              = std::chrono::system_clock::now();
- //       std::chrono::duration<double> elapsed = end - start;
- //       std::cout << "Time elapsed: " << elapsed.count() << "s\n" << std::endl;
+        //       auto end                              = std::chrono::system_clock::now();
+        //       std::chrono::duration<double> elapsed = end - start;
+        //       std::cout << "Time elapsed: " << elapsed.count() << "s\n" << std::endl;
     }
 }
 
