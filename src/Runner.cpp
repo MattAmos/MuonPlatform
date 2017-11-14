@@ -163,20 +163,20 @@ int getAvg(int d[NUM_SAMP]) {
 void turn(int ld, int rd) {
     if (ld > 2000 && rd > 2000) {
         if (rand() < 0.5) {
-            std::cout << "RMAX " << ld << " " << rd << std::endl;
+            //std::cout << "RMAX " << ld << " " << rd << std::endl;
             sensors.servo.setPwmTime(SERVO_PWM_MAX);
         }
         else {
-            std::cout << "RMIN " << ld << " " << rd << std::endl;
+            //std::cout << "RMIN " << ld << " " << rd << std::endl;
             sensors.servo.setPwmTime(SERVO_PWM_MIN);
         }
     }
     else if (ld > 2000) {
-        std::cout << "MAX " << ld << " " << rd << std::endl;
+        //std::cout << "MAX " << ld << " " << rd << std::endl;
         sensors.servo.setPwmTime(SERVO_PWM_MAX);
     }
     else if (rd > 2000) {
-        std::cout << "MIN " << ld << " " << rd << std::endl;
+        //std::cout << "MIN " << ld << " " << rd << std::endl;
         sensors.servo.setPwmTime(SERVO_PWM_MIN);
     }
     else {
@@ -184,20 +184,20 @@ void turn(int ld, int rd) {
             //           sensors.servo.setPwmTime(SERVO_PWM_MID);
 
             if (rand() < 0.5) {
-                std::cout << "RMAX " << ld << " " << rd << std::endl;
+                //std::cout << "RMAX " << ld << " " << rd << std::endl;
                 sensors.servo.setPwmTime(SERVO_PWM_MAX);
             }
             else {
-                std::cout << "RMIN " << ld << " " << rd << std::endl;
+                //std::cout << "RMIN " << ld << " " << rd << std::endl;
                 sensors.servo.setPwmTime(SERVO_PWM_MIN);
             }
         }
         else if (ld > rd) {
-            std::cout << "MAX " << ld << " " << rd << std::endl;
+            //std::cout << "MAX " << ld << " " << rd << std::endl;
             sensors.servo.setPwmTime(SERVO_PWM_MAX);
         }
         else if (rd > ld) {
-            std::cout << "MIN " << ld << " " << rd << std::endl;
+            //std::cout << "MIN " << ld << " " << rd << std::endl;
             sensors.servo.setPwmTime(SERVO_PWM_MIN);
         }
     }
@@ -243,12 +243,12 @@ void* move_thread(void* threadid) {
         printf("[MOTION] F %4d, L %4d, R %4d, B %4d\n", fd, ld, rd, bd);
 
         pthread_mutex_lock(&mutex);
-        if (fd < fdStop || (fd < fdStop + 20 && ld < 60) || (fdStop + 20 < 100 && rd < 60) || (ld < 15)
-            || (rd < 15))  // 2. check if <56 cm front
+        if (fd < fdStop || (fd < fdStop + 20 && ld < 60) || (fdStop + 20 < 100 && rd < 60) || (ld < 10 && rd > 10)
+            || (rd < 15 && ld > 15))  // 2. check if <56 cm front
         {
-            fdStop = 56;
-            while (((fd < fdStop || (fd + 20 < fdStop && ld < 60) || (fd + 20 < fdStop && rd < 60) || (ld < 15)
-                     || (rd < 15)))
+            fdStop = 30;
+            while (((fd < fdStop || (fd + 20 < fdStop && ld < 60) || (fd + 20 < fdStop && rd < 60) || (ld < 10 && rd > 10)
+                     || (rd < 15 && ld > 15)))
                    && bd > 10)  // 2a. reverse until out of range
             {
                 count++;
@@ -264,25 +264,28 @@ void* move_thread(void* threadid) {
                 bd = getAvg(backDist);
 
                 printf("[MOTION] F %4d, L %4d, R %4d, B %4d\n", fd, ld, rd, bd);
-                turn(ld, rd);
+                turn(rd, ld);
                 pthread_mutex_lock(&dc_mut);
                 sensors.move = DC_BACK;
                 pthread_mutex_unlock(&dc_mut);
-
+		usleep(50);
                 // Now we check if we're stuck in a loop, try to reverse out of it!
                 elapsed = std::chrono::system_clock::now() - timePt;
                 timePt  = std::chrono::system_clock::now();
-                if (elapsed.count() < 0.5) {
+
+                if (elapsed.count() < 1) { //If we're trying to reverse after a second of movement
                     stuckCount++;
                 }
-                if (stuckCount > 50) {
-                    while (bd > 80) {
+                if (stuckCount > 20) {
+		    std::cout << "[MOTION] Stuck!" << std::endl;
+                    while (bd > 20 && (std::chrono::system_clock::now() - timePt).count() < 15) {
+			//turn(rd, ld);
+			std::cout << "[MOTION] Unsticking!" << std::endl;
                         backDist[count % NUM_SAMP] = sensors.sonic_back.getCM();
                         bd                         = getAvg(backDist);
                     }
                     stuckCount = 0;
                 }
-                usleep(50);
                 //                backward();
             }
 
@@ -315,7 +318,7 @@ void* move_thread(void* threadid) {
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
-            fdStop = 80;
+            fdStop = 120;
         }
         pthread_mutex_unlock(&mutex);
         usleep(1000);
@@ -357,9 +360,9 @@ void* cv_thread(void* threadid) {
         hog.detectMultiScale(img_gray, found, 0, cv::Size(4, 4), cv::Size(0, 0), 1.08, 3);
         face_cascade.detectMultiScale(img_gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(50, 50));
 
-
+	/*
         for (i = 0; i < found.size(); i++) {
-            Rect r = found[i];
+            cv::Rect r = found[i];
             for (j = 0; j < found.size(); j++) {
                 if (j != i && (r & found[j]) == r) {
                     break;
@@ -369,6 +372,7 @@ void* cv_thread(void* threadid) {
                 found_filtered.push_back(r);
             }
         }
+	*/
 
         for (i = 0; i < found.size(); i++) {
             r = found[i];
@@ -445,12 +449,13 @@ void* cv_thread(void* threadid) {
         elapsed = end - start;
         std::cout << "[VISION] Time elapsed: " << elapsed.count() << "s\n" << std::endl;
     }
+    usleep(100);
 }
 
 int main(int argc, char** argv) {
     signal(SIGINT, signalHandler);
     pthread_t threads[NUM_THREADS];
-    int rc[NUM_THREADS], i = 0;
+    int rc[NUM_THREADS], i;
     sensors.init();
     wiringPiSetupGpio();
 
@@ -464,11 +469,11 @@ int main(int argc, char** argv) {
     sensors.move = DC_FRWD;
 
     // Create our threads
-    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, i);
-    rc[1] = pthread_create(&threads[1], NULL, inp_thread, ++i);
-    rc[2] = pthread_create(&threads[2], NULL, move_thread, ++i);
-    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, ++i);
-    rc[4] = pthread_create(&threads[4], NULL, cv_thread, ++i);
+    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i);
+    rc[1] = pthread_create(&threads[1], NULL, inp_thread, &(++i));
+    rc[2] = pthread_create(&threads[2], NULL, move_thread, &(++i));
+    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &(++i));
+    rc[4] = pthread_create(&threads[4], NULL, cv_thread, &(++i));
     pthread_exit(NULL);
 
     return 0;
