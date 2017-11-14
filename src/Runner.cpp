@@ -45,7 +45,7 @@ void* servo_pwm_thread(void* threadid) {
         sensors.servo.setValGPIO("0");
         usleep(20000 - sensors.servo.getPwmTime());
         pthread_mutex_unlock(&mutex);
-        usleep(50);
+        usleep(100);
     }
 }
 
@@ -54,7 +54,7 @@ void* dc_pwm_thread(void* threadid) {
         pthread_mutex_lock(&dc_mut);
         sensors.dc_move(sensors.move);
         pthread_mutex_unlock(&dc_mut);
-        usleep(1000);
+        usleep(5);
         sensors.dc_move(DC_STOP);
         usleep(5000);
     }
@@ -160,6 +160,50 @@ int getAvg(int d[NUM_SAMP]) {
     return result;
 }
 
+void turn(int ld, int rd){
+    if (ld > 2000 && rd > 2000) {
+        if (rand() < 0.5) {
+            std::cout << "RMAX " << ld << " " << rd << std::endl;
+            sensors.servo.setPwmTime(SERVO_PWM_MAX);
+        }
+        else {
+            std::cout << "RMIN " << ld << " " << rd << std::endl;
+            sensors.servo.setPwmTime(SERVO_PWM_MIN);
+        }
+    }
+    else if (ld > 2000) {
+        std::cout << "MAX " << ld << " " << rd << std::endl;
+        sensors.servo.setPwmTime(SERVO_PWM_MAX);
+    }
+    else if (rd > 2000) {
+        std::cout << "MIN " << ld << " " << rd << std::endl;
+        sensors.servo.setPwmTime(SERVO_PWM_MIN);
+    }
+    else {
+        if (abs(ld - rd) < 5) {
+ //           sensors.servo.setPwmTime(SERVO_PWM_MID);
+	    
+	    if (rand() < 0.5) {
+                std::cout << "RMAX " << ld << " " << rd << std::endl;
+                sensors.servo.setPwmTime(SERVO_PWM_MAX);
+            }
+            else {
+                std::cout << "RMIN " << ld << " " << rd << std::endl;
+                sensors.servo.setPwmTime(SERVO_PWM_MIN);
+            }
+	    
+        }
+        else if (ld > rd) {
+            std::cout << "MAX " << ld << " " << rd << std::endl;
+            sensors.servo.setPwmTime(SERVO_PWM_MAX);
+        }
+        else if (rd > ld) {
+            std::cout << "MIN " << ld << " " << rd << std::endl;
+            sensors.servo.setPwmTime(SERVO_PWM_MIN);
+        }
+    }
+}
+
 void* move_thread(void* threadid) {
     // Ranger rFinder = Ranger();
     int frontDist[NUM_SAMP], leftDist[NUM_SAMP], rightDist[NUM_SAMP], backDist[NUM_SAMP];
@@ -175,6 +219,7 @@ void* move_thread(void* threadid) {
     sensors.move = DC_FRWD;  // go forward
     pthread_mutex_unlock(&dc_mut);
     usleep(50);
+    int fdStop = 56;
     while (true) {
         count++;
         //if (count % 3000 == 0) {
@@ -195,10 +240,11 @@ void* move_thread(void* threadid) {
         printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
 
         pthread_mutex_lock(&mutex);
-        if (fd < 80 || ld < 20 || rd < 20)  // 2. check if <56 cm front
+        if (fd < fdStop || (fd < fdStop + 20 && ld < 60) || (fdStop + 20 < 100 && rd < 60) || (ld < 15) || (rd < 15))  // 2. check if <56 cm front
         {
-            while (((fd < 80 || ld < 20 || rd < 20))
-                   && bd > 15)  // 2a. reverse until out of range
+	    fdStop = 56;
+            while (((fd < fdStop || (fd + 20 < fdStop && ld < 60) || (fd + 20 < fdStop && rd < 60) || (ld < 15) || (rd < 15)))
+                   && bd > 10)  // 2a. reverse until out of range
             {
 		count++;
 	//	if(count % 3000 == 0){ sensors.sonicInit(); }
@@ -213,7 +259,7 @@ void* move_thread(void* threadid) {
                 bd = getAvg(backDist);
 
                 printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
-
+		turn(ld, rd);
                 pthread_mutex_lock(&dc_mut);
                 sensors.move = DC_BACK;
                 pthread_mutex_unlock(&dc_mut);
@@ -231,46 +277,7 @@ void* move_thread(void* threadid) {
             pthread_mutex_unlock(&dc_mut);
 	    usleep(1000);	
 
-            if (ld > 2000 && rd > 2000) {
-                if (rand() < 0.5) {
-                    std::cout << "RMAX " << ld << " " << rd << std::endl;
-                    sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                }
-                else {
-                    std::cout << "RMIN " << ld << " " << rd << std::endl;
-                    sensors.servo.setPwmTime(SERVO_PWM_MIN);
-                }
-            }
-            else if (ld > 2000) {
-                std::cout << "MAX " << ld << " " << rd << std::endl;
-                sensors.servo.setPwmTime(SERVO_PWM_MAX);
-            }
-            else if (rd > 2000) {
-                std::cout << "MIN " << ld << " " << rd << std::endl;
-                sensors.servo.setPwmTime(SERVO_PWM_MIN);
-            }
-
-            else {
-
-                if (abs(ld - rd) < 10) {
-                    if (rand() < 0.5) {
-                        std::cout << "RMAX " << ld << " " << rd << std::endl;
-                        sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                    }
-                    else {
-                        std::cout << "RMIN " << ld << " " << rd << std::endl;
-                        sensors.servo.setPwmTime(SERVO_PWM_MIN);
-                    }
-                }
-                else if (ld > rd) {
-                    std::cout << "MAX " << ld << " " << rd << std::endl;
-                    sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                }
-                else if (rd > ld) {
-                    std::cout << "MIN " << ld << " " << rd << std::endl;
-                    sensors.servo.setPwmTime(SERVO_PWM_MIN);
-                }
-            }
+	    turn(ld, rd);
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
@@ -281,25 +288,7 @@ void* move_thread(void* threadid) {
         }
         else  // 3. reset to forward position when all fine
         {
-	    if (abs(ld - rd) < 10) {
-                if (rand() < 0.5) {
-                    std::cout << "RMAX " << ld << " " << rd << std::endl;
-                    sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                }
-                else {
-                    std::cout << "RMIN " << ld << " " << rd << std::endl;
-                    sensors.servo.setPwmTime(SERVO_PWM_MIN);
-                }
-            }
-            else if (ld > rd) {
-                std::cout << "MAX " << ld << " " << rd << std::endl;
-                sensors.servo.setPwmTime(SERVO_PWM_MAX);
-            }
-            else if (rd > ld) {
-                std::cout << "MIN " << ld << " " << rd << std::endl;
-                sensors.servo.setPwmTime(SERVO_PWM_MIN);
-            }
-
+	    turn(ld, rd);
             pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;
             pthread_mutex_unlock(&dc_mut);
@@ -307,9 +296,10 @@ void* move_thread(void* threadid) {
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
+	    fdStop = 80;
         }
         pthread_mutex_unlock(&mutex);
-        usleep(100);
+        usleep(1000);
     }
 }
 
