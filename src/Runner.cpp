@@ -59,7 +59,45 @@ void* dc_pwm_thread(void* threadid) {
 }
 
 void* inp_thread(void* threadid) {
+    std::ifstream file;
+    std::string first, second;
     while (true) {
+        // Check file for network control
+        first = second = "";
+        file.open("/var/www/bootstrap/run.txt");
+        file >> first;
+        // If we have two commands (<left/right> <front/back>)
+        if (file >> second) {
+            if (first == "left") {
+                sensors.servo.setPwmTime(SERVO_PWM_MAX);
+            }
+            else if (first == "right") {
+                sensors.servo.setPwmTime(SERVO_PWM_MIN);
+            }
+            if (second == "front") {
+                forward();
+            }
+            else if (second == "back") {
+                backward();
+            }
+        }
+        // If we have one command (<front/back/auto>)
+        else {
+            if (first != "auto") {
+                sensors.servo.setPwmTime(SERVO_PWM_MID);
+                if (first == "front") {
+                    forward();
+                }
+                else if (first == "back") {
+                    backward();
+                }
+            }
+            else {
+                usleep(50000);
+            }
+        }
+        file.close();
+        // Check controller for PS4 control
         if (joystick.isFound()) {
             if (joystick.sample(&event) && event.isAxis()) {
                 if (event.number == 0) {  // L3 HORIZONTAL
@@ -71,6 +109,7 @@ void* inp_thread(void* threadid) {
             }
         }
         else {
+            // Check keyboard control
             if (kbhit()) {
                 contFlag = true;
                 int ch   = getch();
