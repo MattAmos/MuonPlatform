@@ -218,7 +218,11 @@ void* move_thread(void* threadid) {
     sensors.move = DC_FRWD;  // go forward
     pthread_mutex_unlock(&dc_mut);
     usleep(50);
-    int fdStop = 56;
+    int fdStop = 56, stuckCount = 0;
+
+    std::chrono::time_point<std::chrono::system_clock> timePt = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed;
+
     while (true) {
         count++;
         // if (count % 3000 == 0) {
@@ -236,7 +240,7 @@ void* move_thread(void* threadid) {
         rd = getAvg(rightDist);
         bd = getAvg(backDist);
 
-        printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
+        printf("[MOTION] F %4d, L %4d, R %4d, B %4d\n", fd, ld, rd, bd);
 
         pthread_mutex_lock(&mutex);
         if (fd < fdStop || (fd < fdStop + 20 && ld < 60) || (fdStop + 20 < 100 && rd < 60) || (ld < 15)
@@ -259,11 +263,25 @@ void* move_thread(void* threadid) {
                 rd = getAvg(rightDist);
                 bd = getAvg(backDist);
 
-                printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
+                printf("[MOTION] F %4d, L %4d, R %4d, B %4d\n", fd, ld, rd, bd);
                 turn(ld, rd);
                 pthread_mutex_lock(&dc_mut);
                 sensors.move = DC_BACK;
                 pthread_mutex_unlock(&dc_mut);
+
+                // Now we check if we're stuck in a loop, try to reverse out of it!
+                elapsed = std::chrono::system_clock::now() - timePt;
+                timePt  = std::chrono::system_clock::now();
+                if (elapsed.count() < 0.5) {
+                    stuckCount++;
+                }
+                if (stuckCount > 50) {
+                    while (bd > 80) {
+                        backDist[count % NUM_SAMP] = sensors.sonic_back.getCM();
+                        bd                         = getAvg(backDist);
+                    }
+                    stuckCount = 0;
+                }
                 usleep(50);
                 //                backward();
             }
@@ -312,7 +330,7 @@ void* cv_thread(void* threadid) {
     cv::CascadeClassifier face_cascade;
 
     if (!face_cascade.load(face_cascade_name)) {
-        std::cout << "Error loading face cascade" << std::endl;
+        std::cout << "[VISION] Error loading face cascade" << std::endl;
     }
 
     cv::Mat img = cv::imread("/dev/shm/mjpeg/cam.jpg"), img_gray;
@@ -330,7 +348,7 @@ void* cv_thread(void* threadid) {
     while (true) {
         img = cv::imread("/dev/shm/mjpeg/cam.jpg");
         if (!img.data) {
-            std::cout << "No image data. Continuing..." << std::endl;
+            std::cout << "[VISION] No image data. Continuing..." << std::endl;
             break;
         }
         start = std::chrono::system_clock::now();
@@ -344,7 +362,6 @@ void* cv_thread(void* threadid) {
             Rect r = found[i];
             for (j = 0; j < found.size(); j++) {
                 if (j != i && (r & found[j]) == r) {
-                    std::cout << "Found something." << std::endl;
                     break;
                 }
             }
@@ -433,12 +450,11 @@ void* cv_thread(void* threadid) {
 int main(int argc, char** argv) {
     signal(SIGINT, signalHandler);
     pthread_t threads[NUM_THREADS];
-    int rc[NUM_THREADS], i[NUM_THREADS];
+    int rc[NUM_THREADS], i = 0;
     sensors.init();
     wiringPiSetupGpio();
 
     // Setup curses
-    sensors.move = DC_FRWD;
     /*    initscr();
         cbreak();
         noecho();
@@ -448,11 +464,11 @@ int main(int argc, char** argv) {
     sensors.move = DC_FRWD;
 
     // Create our threads
-    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
-    rc[1] = pthread_create(&threads[1], NULL, inp_thread, &i[1]);
-    rc[2] = pthread_create(&threads[2], NULL, move_thread, &i[2]);
-    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, &i[3]);
-    rc[4] = pthread_create(&threads[4], NULL, cv_thread, &i[4]);
+    rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, i);
+    rc[1] = pthread_create(&threads[1], NULL, inp_thread, ++i);
+    rc[2] = pthread_create(&threads[2], NULL, move_thread, ++i);
+    rc[3] = pthread_create(&threads[3], NULL, dc_pwm_thread, ++i);
+    rc[4] = pthread_create(&threads[4], NULL, cv_thread, ++i);
     pthread_exit(NULL);
 
     return 0;
