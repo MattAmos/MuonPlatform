@@ -169,10 +169,13 @@ void* move_thread(void* threadid) {
     // 2. If something's within 56 cm, reverse -> if something's behind it within 15cm, or it reverses outside of the
     // 56cm mark leave the loop
     // 2a. After loop, it checks which direction it goes
-    int count = 0;
+    int count = 1;
+    pthread_mutex_lock(&dc_mut);
+    sensors.move = DC_FRWD;  // go forward
+    pthread_mutex_unlock(&dc_mut);
     while (true) {
         count++;
-        if (count % 500 == 0) {
+        if (count % 1000 == 0) {
             sensors.sonicInit();
         }
         // if (!kbhit()) {
@@ -191,11 +194,13 @@ void* move_thread(void* threadid) {
 
         pthread_mutex_lock(&mutex);
         int avg = fd + ld + rd;
-        if (fd < 56 || ld < 56 || rd < 56)  // 2. check if <56 cm front
+        if (fd < 80 || ld < 60 || rd < 60)  // 2. check if <56 cm front
         {
-            while (((avg = fd + ld + rd) < 500 || (fd < 56 || ld < 56 || rd << 56))
-                   && backDist > 15)  // 2a. reverse until out of range
+            while (((fd < 80 || ld < 40 || rd < 40))
+                   && bd > 15)  // 2a. reverse until out of range
             {
+		count++;
+		if(count % 1000 == 0){ sensors.sonicInit(); }
                 frontDist[count % NUM_SAMP] = sensors.sonic_front.getCM();
                 leftDist[count % NUM_SAMP]  = sensors.sonic_left.getCM();
                 rightDist[count % NUM_SAMP] = sensors.sonic_right.getCM();
@@ -219,9 +224,9 @@ void* move_thread(void* threadid) {
 
             // 2b. choose direction
             //  stop();
-            pthread_mutex_lock(&dc_mut);
-            sensors.move = DC_STOP;
-            pthread_mutex_unlock(&dc_mut);
+            //pthread_mutex_lock(&dc_mut);
+            //sensors.move = DC_STOP;
+            //pthread_mutex_unlock(&dc_mut);
 
             if (ld > 2000 && rd > 2000) {
                 if (rand() < 0.5) {
