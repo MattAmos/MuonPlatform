@@ -63,6 +63,7 @@ void* dc_pwm_thread(void* threadid) {
 void* inp_thread(void* threadid) {
     std::ifstream file;
     std::string first, second;
+    int ch;
     while (true) {
         // Check file for network control
         first = second = "";
@@ -122,7 +123,7 @@ void* inp_thread(void* threadid) {
             // Check keyboard control
             if (kbhit()) {
                 contFlag = true;
-                int ch   = getch();
+                ch   = getch();
                 switch (ch) {
                     case 'a': sensors.servo.incPwmTime(100); break;
                     case 'd': sensors.servo.incPwmTime(-100); break;
@@ -163,7 +164,7 @@ void* move_thread(void* threadid) {
     // Ranger rFinder = Ranger();
     int frontDist[NUM_SAMP], leftDist[NUM_SAMP], rightDist[NUM_SAMP], backDist[NUM_SAMP];
     int fd, ld, rd, bd;
-    srand(NULL);
+    srand(time(NULL));
     // so far, the logic is:
     // 1. It goes forward
     // 2. If something's within 56 cm, reverse -> if something's behind it within 15cm, or it reverses outside of the
@@ -173,11 +174,12 @@ void* move_thread(void* threadid) {
     pthread_mutex_lock(&dc_mut);
     sensors.move = DC_FRWD;  // go forward
     pthread_mutex_unlock(&dc_mut);
+    usleep(50);
     while (true) {
         count++;
-        if (count % 1000 == 0) {
-            sensors.sonicInit();
-        }
+        //if (count % 3000 == 0) {
+        //    sensors.sonicInit();
+        //}
         // if (!kbhit()) {
         // Get sensors
         frontDist[count % NUM_SAMP] = sensors.sonic_front.getCM();
@@ -193,14 +195,13 @@ void* move_thread(void* threadid) {
         printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
 
         pthread_mutex_lock(&mutex);
-        int avg = fd + ld + rd;
-        if (fd < 80 || ld < 60 || rd < 60)  // 2. check if <56 cm front
+        if (fd < 80 || ld < 20 || rd < 20)  // 2. check if <56 cm front
         {
-            while (((fd < 80 || ld < 40 || rd < 40))
+            while (((fd < 80 || ld < 20 || rd < 20))
                    && bd > 15)  // 2a. reverse until out of range
             {
 		count++;
-		if(count % 1000 == 0){ sensors.sonicInit(); }
+	//	if(count % 3000 == 0){ sensors.sonicInit(); }
                 frontDist[count % NUM_SAMP] = sensors.sonic_front.getCM();
                 leftDist[count % NUM_SAMP]  = sensors.sonic_left.getCM();
                 rightDist[count % NUM_SAMP] = sensors.sonic_right.getCM();
@@ -216,7 +217,8 @@ void* move_thread(void* threadid) {
                 pthread_mutex_lock(&dc_mut);
                 sensors.move = DC_BACK;
                 pthread_mutex_unlock(&dc_mut);
-                //                backward();
+                usleep(50); 
+	       //                backward();
             }
 
             ld = sensors.sonic_left.getCM();
@@ -224,9 +226,10 @@ void* move_thread(void* threadid) {
 
             // 2b. choose direction
             //  stop();
-            //pthread_mutex_lock(&dc_mut);
-            //sensors.move = DC_STOP;
-            //pthread_mutex_unlock(&dc_mut);
+            pthread_mutex_lock(&dc_mut);
+            sensors.move = DC_STOP;
+            pthread_mutex_unlock(&dc_mut);
+	    usleep(1000);	
 
             if (ld > 2000 && rd > 2000) {
                 if (rand() < 0.5) {
@@ -248,27 +251,24 @@ void* move_thread(void* threadid) {
             }
 
             else {
-                if (ld > rd && ld < 80) {
+
+                if (abs(ld - rd) < 10) {
+                    if (rand() < 0.5) {
+                        std::cout << "RMAX " << ld << " " << rd << std::endl;
+                        sensors.servo.setPwmTime(SERVO_PWM_MAX);
+                    }
+                    else {
+                        std::cout << "RMIN " << ld << " " << rd << std::endl;
+                        sensors.servo.setPwmTime(SERVO_PWM_MIN);
+                    }
+                }
+                else if (ld > rd) {
                     std::cout << "MAX " << ld << " " << rd << std::endl;
                     sensors.servo.setPwmTime(SERVO_PWM_MAX);
                 }
-                else if (rd > ld && rd < 80) {
+                else if (rd > ld) {
                     std::cout << "MIN " << ld << " " << rd << std::endl;
                     sensors.servo.setPwmTime(SERVO_PWM_MIN);
-                }
-                else {
-                    if (abs(ld - rd) < 10) {
-                        if (rand() < 0.5) {
-                            std::cout << "RMAX " << ld << " " << rd << std::endl;
-                            sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                        }
-                        else {
-                            std::cout << "RMIN " << ld << " " << rd << std::endl;
-                            sensors.servo.setPwmTime(SERVO_PWM_MIN);
-                        }
-                    }
-                    // std::cout << "MID "  << ld << " " << rd << std::endl;
-                    // sensors.servo.setPwmTime(SERVO_PWM_MID);
                 }
             }
             pthread_mutex_unlock(&mutex);
@@ -277,13 +277,33 @@ void* move_thread(void* threadid) {
             pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;  // go forward
             pthread_mutex_unlock(&dc_mut);
+	    usleep(50);
         }
         else  // 3. reset to forward position when all fine
         {
+	    if (abs(ld - rd) < 10) {
+                if (rand() < 0.5) {
+                    std::cout << "RMAX " << ld << " " << rd << std::endl;
+                    sensors.servo.setPwmTime(SERVO_PWM_MAX);
+                }
+                else {
+                    std::cout << "RMIN " << ld << " " << rd << std::endl;
+                    sensors.servo.setPwmTime(SERVO_PWM_MIN);
+                }
+            }
+            else if (ld > rd) {
+                std::cout << "MAX " << ld << " " << rd << std::endl;
+                sensors.servo.setPwmTime(SERVO_PWM_MAX);
+            }
+            else if (rd > ld) {
+                std::cout << "MIN " << ld << " " << rd << std::endl;
+                sensors.servo.setPwmTime(SERVO_PWM_MIN);
+            }
+
             pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;
             pthread_mutex_unlock(&dc_mut);
-            sensors.servo.setPwmTime(SERVO_PWM_MID);
+	    usleep(50);
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
@@ -307,20 +327,24 @@ void* cv_thread(void* threadid) {
     cv::Mat img = cv::imread("/dev/shm/mjpeg/cam.jpg"), img_gray;
     cv::HOGDescriptor hog;
     hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
+    std::vector<cv::Rect> found, found_filtered, faces;
+    size_t i, j;
+
+    cv::Rect r;
+    cv::Point centre;
+
     while (true) {
         img = cv::imread("/dev/shm/mjpeg/cam.jpg");
         if (!img.data) {
             std::cout << "No image data. Continuing..." << std::endl;
             break;
         }
-        auto start = std::chrono::system_clock::now();
-        std::vector<cv::Rect> found, found_filtered, faces;
+ //       auto start = std::chrono::system_clock::now();
         cv::cvtColor(img, img_gray, CV_BGR2GRAY);
         // equalizeHist(img_gray, img_gray);
         hog.detectMultiScale(img_gray, found, 0, cv::Size(4, 4), cv::Size(0, 0), 1.08, 3);
         face_cascade.detectMultiScale(img_gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(50, 50));
 
-        size_t i, j;
         /*
             for (i=0; i<found.size(); i++){
                     Rect r = found[i];
@@ -336,7 +360,7 @@ void* cv_thread(void* threadid) {
                 }
         */
         for (i = 0; i < found.size(); i++) {
-            cv::Rect r = found[i];
+            r = found[i];
             r.x += cvRound(r.width * 0.1);
             r.width = cvRound(r.width * 0.8);
             r.y += cvRound(r.height * 0.06);
@@ -345,7 +369,7 @@ void* cv_thread(void* threadid) {
         }
 
         for (size_t k = 0; k < faces.size(); k++) {
-            cv::Point centre(faces[i].x + faces[i].width * 0.5, faces[i].y + faces[i].height * 0.5);
+	    centre = cv::Point(faces[i].x + faces[i].width * 0.5, faces[i].y + faces[i].height * 0.5);
             cv::ellipse(img,
                         centre,
                         cv::Size(faces[i].width * 0.5, faces[i].height * 0.5),
@@ -407,9 +431,9 @@ void* cv_thread(void* threadid) {
                 f.close();  // je referme le fichier
             }
         }
-        auto end                              = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Time elapsed: " << elapsed.count() << "s\n" << std::endl;
+ //       auto end                              = std::chrono::system_clock::now();
+ //       std::chrono::duration<double> elapsed = end - start;
+ //       std::cout << "Time elapsed: " << elapsed.count() << "s\n" << std::endl;
     }
 }
 
