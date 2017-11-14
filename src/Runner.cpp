@@ -23,18 +23,18 @@ bool kbhit() {
 }
 
 void forward() {
-    dc_2.setValGPIO("0");
-    dc_1.setValGPIO("1");
+    sensors.dc_2.setValGPIO("0");
+    sensors.dc_1.setValGPIO("1");
 }
 
 void backward() {
-    dc_1.setValGPIO("0");
-    dc_2.setValGPIO("1");
+    sensors.dc_1.setValGPIO("0");
+    sensors.dc_2.setValGPIO("1");
 }
 
 void stop() {
-    dc_2.setValGPIO("0");
-    dc_1.setValGPIO("0");
+    sensors.dc_2.setValGPIO("0");
+    sensors.dc_1.setValGPIO("0");
 }
 
 void* servo_pwm_thread(void* threadid) {
@@ -45,7 +45,7 @@ void* servo_pwm_thread(void* threadid) {
         sensors.servo.setValGPIO("0");
         usleep(20000 - sensors.servo.getPwmTime());
         pthread_mutex_unlock(&mutex);
-        usleep(1000);
+        usleep(50);
     }
 }
 
@@ -89,11 +89,19 @@ void* inp_thread(void* threadid) {
     }
 }
 
-void* move_thread(void* threadid) {
+void* move_thread(void* threadid) 
+{
     // Ranger rFinder = Ranger();
     int frontDist, leftDist, rightDist, backDist;
+    forward();	//1.Go forward
+    srand(NULL);
+    //so far, the logic is:
+    //1. It goes forward
+    //2. If something's within 56 cm, reverse -> if something's behind it within 15cm, or it reverses outside of the 56cm mark leave the loop
+    	//2a. After loop, it checks which direction it goes
 
-    while (true) {
+    while (true) 
+    {
         // if (!kbhit()) {
         // Get sensors
         frontDist = sensors.sonic_front.getCM();
@@ -102,40 +110,79 @@ void* move_thread(void* threadid) {
         backDist  = sensors.sonic_back.getCM();
 
         pthread_mutex_lock(&mutex);
-        // If something is immediately in front of car
-        std::cout << "Front: " << frontDist << std::endl;
-        if (frontDist > 0 && frontDist < 56) {
-            while (frontDist < 56 && backDist > 15) {  // backup until a turn can be made
+        if (frontDist > 0 && frontDist < 56) 	//2. check if <56 cm front
+        {
+            while (frontDist < 56 && backDist > 15) 	//2a. reverse until out of range
+            { 
                 frontDist = sensors.sonic_front.getCM();
                 backDist  = sensors.sonic_back.getCM();
-
                 backward();
             }
 
-      /*          frontDist = sensors.sonic_front.getCM();
+            leftDist  = sensors.sonic_left.getCM();
+    		rightDist = sensors.sonic_right.getCM();
 
-                //Finished backing up
-                if(frontDist < 56){   //if distance is still too small for a successful simple turn
-                    //find which side has most room, go that way
-                    //If we have room on the left
-                    if(leftDist > rightDist)        { sensors.servo.setPwmTime(SERVO_PWM_MAX); }
-                    else if(rightDist > leftDist)   { sensors.servo.setPwmTime(SERVO_PWM_MIN); }
-                    else                            { sensors.servo.setPwmTime(SERVO_PWM_MID); }
-                }
-                forward();
-            }
-            else{
-                if(leftDist > rightDist + 5){
-                    sensors.servo.setPwmTime(SERVO_PWM_MAX);
-                }
-                else if(rightDist > leftDist + 5){
-                    sensors.servo.setPwmTime(SERVO_PWM_MIN);
-                }
-                forward();
-        */    }
-      pthread_mutex_unlock(&mutex);
-      usleep(1000);
-      //  }
+    		//2b. choose direction
+    	//	stop();
+    		if(leftDist > 2000 && rightDist > 2000){
+    			if(rand() < 0.5){
+        			std::cout << "RMAX " << leftDist << " " << rightDist << std::endl;
+        			sensors.servo.setPwmTime(SERVO_PWM_MAX);
+        		}
+        		else{
+        			std::cout << "RMIN " << leftDist << " " << rightDist << std::endl;
+        			sensors.servo.setPwmTime(SERVO_PWM_MIN);
+        		}
+    		}
+    		else if(leftDist > 2000){
+    			std::cout << "MAX " << leftDist << " " << rightDist << std::endl; 
+    			sensors.servo.setPwmTime(SERVO_PWM_MAX);
+    		}
+    		else if(rightDist > 2000){
+    			std::cout << "MIN " << leftDist << " " << rightDist << std::endl; 
+    			sensors.servo.setPwmTime(SERVO_PWM_MIN);
+    		}
+
+    		else
+    		{
+	            if(leftDist > rightDist && leftDist < 80){ 
+	            	std::cout << "MAX " << leftDist << " " << rightDist << std::endl; 
+	            	sensors.servo.setPwmTime(SERVO_PWM_MAX); 
+	            }
+	            else if(rightDist > leftDist && rightDist < 80){
+	            	std::cout << "MIN " << leftDist << " " << rightDist << std::endl; 
+	            	sensors.servo.setPwmTime(SERVO_PWM_MIN); 
+	            }
+	            else{
+	            	if(abs(leftDist - rightDist) < 10){
+	            		if(rand() < 0.5){
+	            			std::cout << "RMAX " << leftDist << " " << rightDist << std::endl;
+	            			sensors.servo.setPwmTime(SERVO_PWM_MAX);
+	            		}
+	            		else{
+	            			std::cout << "RMIN " << leftDist << " " << rightDist << std::endl;
+	            			sensors.servo.setPwmTime(SERVO_PWM_MIN);
+	            		}
+	            	}
+	            	// std::cout << "MID "  << leftDist << " " << rightDist << std::endl; 
+	            	// sensors.servo.setPwmTime(SERVO_PWM_MID); 
+	            }
+	        }
+	            pthread_mutex_unlock(&mutex);
+      			usleep(1000);
+      			pthread_mutex_lock(&mutex);
+
+	        	forward();	//go forward
+  	    }
+  	    else 	//3. reset to forward position when all fine
+  	    {
+  	    	sensors.servo.setPwmTime(SERVO_PWM_MID);
+	    	pthread_mutex_unlock(&mutex);
+			usleep(1000);
+			pthread_mutex_lock(&mutex);
+  	    }
+    	pthread_mutex_unlock(&mutex);
+      	usleep(1000);
     }
 }
 
@@ -267,13 +314,13 @@ int main(int argc, char** argv) {
     wiringPiSetupGpio();
 
     // Setup curses
-    initscr();
+/*    initscr();
     cbreak();
     noecho();
     nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
-
-    forward();
+*/
+ //   forward();
 
     // Create our threads
     rc[0] = pthread_create(&threads[0], NULL, servo_pwm_thread, &i[0]);
