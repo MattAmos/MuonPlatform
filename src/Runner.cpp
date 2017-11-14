@@ -324,32 +324,35 @@ void* cv_thread(void* threadid) {
     cv::Rect r;
     cv::Point centre;
 
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    std::chrono::duration<double> elapsed;
+
     while (true) {
         img = cv::imread("/dev/shm/mjpeg/cam.jpg");
         if (!img.data) {
             std::cout << "No image data. Continuing..." << std::endl;
             break;
         }
-        //       auto start = std::chrono::system_clock::now();
+        start = std::chrono::system_clock::now();
         cv::cvtColor(img, img_gray, CV_BGR2GRAY);
         // equalizeHist(img_gray, img_gray);
         hog.detectMultiScale(img_gray, found, 0, cv::Size(4, 4), cv::Size(0, 0), 1.08, 3);
         face_cascade.detectMultiScale(img_gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, cv::Size(50, 50));
 
-        /*
-            for (i=0; i<found.size(); i++){
-                    Rect r = found[i];
-                    for (j=0; j<found.size(); j++){
-                        if (j!=i && (r & found[j]) == r){
-                            std::cout << "Found something." << std::endl;
-                            break;
-                        }
-                    }
-                    if (j==found.size()){
-                        found_filtered.push_back(r);
-                    }
+
+        for (i = 0; i < found.size(); i++) {
+            Rect r = found[i];
+            for (j = 0; j < found.size(); j++) {
+                if (j != i && (r & found[j]) == r) {
+                    std::cout << "Found something." << std::endl;
+                    break;
                 }
-        */
+            }
+            if (j == found.size()) {
+                found_filtered.push_back(r);
+            }
+        }
+
         for (i = 0; i < found.size(); i++) {
             r = found[i];
             r.x += cvRound(r.width * 0.1);
@@ -374,7 +377,7 @@ void* cv_thread(void* threadid) {
         }
 
         if (found.size() > 0 || faces.size() > 0) {
-            std::cout << "Found " << found.size() << " people, " << faces.size() << " faces." << std::endl;
+            std::cout << "[VISION] Found " << found.size() << " people, " << faces.size() << " faces." << std::endl;
             nb_img++;
             /*stringstream ss("/var/www/bootstrap/");
             ss << "test";
@@ -383,7 +386,6 @@ void* cv_thread(void* threadid) {
             ss >> name;*/
             name = "/var/www/bootstrap/test" + std::to_string(nb_img) + ".jpg";
             // place img in /var/www/bootstrap
-            std::cout << name << std::endl;
             cv::imwrite(name, img);
             name.erase(0, 19);
             // add line 36 code for img
@@ -399,15 +401,15 @@ void* cv_thread(void* threadid) {
                 file << "</div>" << std::endl;
 
                 // instruction
-                file.close();  // je referme le fichier
             }
+            file.close();  // je referme le fichier
             // write in mode.txt "ON" and erase everything else
             std::ofstream f("/var/www/bootstrap/mode.txt", std::ios::out | std::ios::trunc);
             if (f) {  // if opened
                 f << "ON" << std::endl;
                 // instructions
-                f.close();  // je referme le fichier
             }
+            f.close();  // je referme le fichier
             if (nb_img == 5) {
                 nb_img = 0;
             }
@@ -419,12 +421,12 @@ void* cv_thread(void* threadid) {
             if (f) {  // if opened
                 f << "OFF" << std::endl;
                 // instructions
-                f.close();  // je referme le fichier
             }
+            f.close();  // je referme le fichier
         }
-        //       auto end                              = std::chrono::system_clock::now();
-        //       std::chrono::duration<double> elapsed = end - start;
-        //       std::cout << "Time elapsed: " << elapsed.count() << "s\n" << std::endl;
+        end     = std::chrono::system_clock::now();
+        elapsed = end - start;
+        std::cout << "[VISION] Time elapsed: " << elapsed.count() << "s\n" << std::endl;
     }
 }
 
