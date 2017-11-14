@@ -150,9 +150,19 @@ void* inp_thread(void* threadid) {
     }
 }
 
+int getAvg(int d[NUM_SAMP]) {
+    int result = 0;
+    for (int i = 0; i < NUM_SAMP; ++i) {
+        result += d[i];
+    }
+    result *= INV_NUM_SAMP;
+    return result;
+}
+
 void* move_thread(void* threadid) {
     // Ranger rFinder = Ranger();
-    int frontDist, leftDist, rightDist, backDist;
+    int frontDist[NUM_SAMP], leftDist[NUM_SAMP], rightDist[NUM_SAMP], backDist[NUM_SAMP];
+    int fd, ld, rd, bd;
     srand(NULL);
     // so far, the logic is:
     // 1. It goes forward
@@ -161,100 +171,114 @@ void* move_thread(void* threadid) {
     // 2a. After loop, it checks which direction it goes
     int count = 0;
     while (true) {
-	count++;
-	if(count % 500 == 0){ sensors.sonicInit(); }
+        count++;
+        if (count % 500 == 0) {
+            sensors.sonicInit();
+        }
         // if (!kbhit()) {
         // Get sensors
-        frontDist = sensors.sonic_front.getCM();
-        leftDist  = sensors.sonic_left.getCM();
-        rightDist = sensors.sonic_right.getCM();
-        backDist  = sensors.sonic_back.getCM();
-	printf("F %03d, L %03d, R %03d, B %03d\n", frontDist, leftDist, rightDist, backDist);
+        frontDist[count % NUM_SAMP] = sensors.sonic_front.getCM();
+        leftDist[count % NUM_SAMP]  = sensors.sonic_left.getCM();
+        rightDist[count % NUM_SAMP] = sensors.sonic_right.getCM();
+        backDist[count % NUM_SAMP]  = sensors.sonic_back.getCM();
+
+        fd = getAvg(frontDist);
+        ld = getAvg(leftDist);
+        rd = getAvg(rightDist);
+        bd = getAvg(backDist);
+
+        printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
 
         pthread_mutex_lock(&mutex);
-	int avg = frontDist + leftDist + rightDist;
-        if (frontDist < 56 || leftDist < 56 || rightDist < 56)  // 2. check if <56 cm front
+        int avg = fd + ld + rd;
+        if (fd < 56 || ld < 56 || rd < 56)  // 2. check if <56 cm front
         {
-	    while (((avg = frontDist + leftDist + rightDist) < 500 || (frontDist < 56 || leftDist < 56 || rightDist << 56)) && backDist > 15)  // 2a. reverse until out of range
+            while (((avg = fd + ld + rd) < 500 || (fd < 56 || ld < 56 || rd << 56))
+                   && backDist > 15)  // 2a. reverse until out of range
             {
-                frontDist = sensors.sonic_front.getCM();
-                leftDist  = sensors.sonic_left.getCM();
-		rightDist = sensors.sonic_right.getCM();
-		backDist  = sensors.sonic_back.getCM();
+                frontDist[count % NUM_SAMP] = sensors.sonic_front.getCM();
+                leftDist[count % NUM_SAMP]  = sensors.sonic_left.getCM();
+                rightDist[count % NUM_SAMP] = sensors.sonic_right.getCM();
+                backDist[count % NUM_SAMP]  = sensors.sonic_back.getCM();
 
-		printf("F %03d, L %03d, R %03d, B %03d\n", frontDist, leftDist, rightDist, backDist);
-                
-		pthread_mutex_lock(&dc_mut);
+                fd = getAvg(frontDist);
+                ld = getAvg(leftDist);
+                rd = getAvg(rightDist);
+                bd = getAvg(backDist);
+
+                printf("F %03d, L %03d, R %03d, B %03d\n", fd, ld, rd, bd);
+
+                pthread_mutex_lock(&dc_mut);
                 sensors.move = DC_BACK;
                 pthread_mutex_unlock(&dc_mut);
                 //                backward();
             }
 
-            leftDist  = sensors.sonic_left.getCM();
-            rightDist = sensors.sonic_right.getCM();
+            ld = sensors.sonic_left.getCM();
+            rd = sensors.sonic_right.getCM();
 
             // 2b. choose direction
             //  stop();
             pthread_mutex_lock(&dc_mut);
-	    sensors.move = DC_STOP;
-	    pthread_mutex_unlock(&dc_mut);
+            sensors.move = DC_STOP;
+            pthread_mutex_unlock(&dc_mut);
 
-	    if (leftDist > 2000 && rightDist > 2000) {
+            if (ld > 2000 && rd > 2000) {
                 if (rand() < 0.5) {
-                    std::cout << "RMAX " << leftDist << " " << rightDist << std::endl;
+                    std::cout << "RMAX " << ld << " " << rd << std::endl;
                     sensors.servo.setPwmTime(SERVO_PWM_MAX);
                 }
                 else {
-                    std::cout << "RMIN " << leftDist << " " << rightDist << std::endl;
+                    std::cout << "RMIN " << ld << " " << rd << std::endl;
                     sensors.servo.setPwmTime(SERVO_PWM_MIN);
                 }
             }
-            else if (leftDist > 2000) {
-                std::cout << "MAX " << leftDist << " " << rightDist << std::endl;
+            else if (ld > 2000) {
+                std::cout << "MAX " << ld << " " << rd << std::endl;
                 sensors.servo.setPwmTime(SERVO_PWM_MAX);
             }
-            else if (rightDist > 2000) {
-                std::cout << "MIN " << leftDist << " " << rightDist << std::endl;
+            else if (rd > 2000) {
+                std::cout << "MIN " << ld << " " << rd << std::endl;
                 sensors.servo.setPwmTime(SERVO_PWM_MIN);
             }
 
             else {
-                if (leftDist > rightDist && leftDist < 80) {
-                    std::cout << "MAX " << leftDist << " " << rightDist << std::endl;
+                if (ld > rd && ld < 80) {
+                    std::cout << "MAX " << ld << " " << rd << std::endl;
                     sensors.servo.setPwmTime(SERVO_PWM_MAX);
                 }
-                else if (rightDist > leftDist && rightDist < 80) {
-                    std::cout << "MIN " << leftDist << " " << rightDist << std::endl;
+                else if (rd > ld && rd < 80) {
+                    std::cout << "MIN " << ld << " " << rd << std::endl;
                     sensors.servo.setPwmTime(SERVO_PWM_MIN);
                 }
                 else {
-                    if (abs(leftDist - rightDist) < 10) {
+                    if (abs(ld - rd) < 10) {
                         if (rand() < 0.5) {
-                            std::cout << "RMAX " << leftDist << " " << rightDist << std::endl;
+                            std::cout << "RMAX " << ld << " " << rd << std::endl;
                             sensors.servo.setPwmTime(SERVO_PWM_MAX);
                         }
                         else {
-                            std::cout << "RMIN " << leftDist << " " << rightDist << std::endl;
+                            std::cout << "RMIN " << ld << " " << rd << std::endl;
                             sensors.servo.setPwmTime(SERVO_PWM_MIN);
                         }
                     }
-                    // std::cout << "MID "  << leftDist << " " << rightDist << std::endl;
+                    // std::cout << "MID "  << ld << " " << rd << std::endl;
                     // sensors.servo.setPwmTime(SERVO_PWM_MID);
                 }
             }
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
-	    pthread_mutex_lock(&dc_mut);
+            pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;  // go forward
             pthread_mutex_unlock(&dc_mut);
-	}
+        }
         else  // 3. reset to forward position when all fine
         {
-	    pthread_mutex_lock(&dc_mut);
+            pthread_mutex_lock(&dc_mut);
             sensors.move = DC_FRWD;
-	    pthread_mutex_unlock(&dc_mut);
-	    sensors.servo.setPwmTime(SERVO_PWM_MID);
+            pthread_mutex_unlock(&dc_mut);
+            sensors.servo.setPwmTime(SERVO_PWM_MID);
             pthread_mutex_unlock(&mutex);
             usleep(100);
             pthread_mutex_lock(&mutex);
